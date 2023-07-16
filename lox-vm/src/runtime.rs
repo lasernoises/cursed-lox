@@ -1,14 +1,14 @@
 mod builtins;
 
-use lox_bytecode::bytecode::Module;
 use crate::value::Value;
 use builtins::Builtins;
+use lox_bytecode::bytecode::Module;
 
+use super::interner::{Interner, Symbol};
 use super::memory::*;
-use super::interner::{Symbol, Interner};
-use lox_gc::{Gc, Trace, Tracer};
 use crate::fiber::Fiber;
 use crate::string::LoxString;
+use lox_gc::{Gc, Trace, Tracer};
 use std::collections::HashMap;
 
 #[derive(PartialEq, Eq, Copy, Clone)]
@@ -203,7 +203,7 @@ impl Runtime {
         } else if let Some(bind) = callee.try_cast::<BoundMethod>() {
             return self.call_bound_method(arity, bind);
         } else {
-            return self.fiber.runtime_error(VmError::InvalidCallee)
+            return self.fiber.runtime_error(VmError::InvalidCallee);
         }
     }
 
@@ -239,9 +239,8 @@ impl Runtime {
         self.store_ip();
 
         let instance: Gc<Instance> = self.manage(Instance::new(class).into());
-        self.fiber.with_stack(|stack| {
-            stack.rset(arity, Value::from_object(instance.erase()))
-        });
+        self.fiber
+            .with_stack(|stack| stack.rset(arity, Value::from_object(instance.erase())));
 
         if let Some(initializer) = class.method(self.init_symbol) {
             if !initializer.is_object() {
@@ -271,9 +270,8 @@ impl Runtime {
     pub fn call_bound_method(&mut self, arity: usize, bind: Gc<BoundMethod>) -> Signal {
         self.store_ip();
 
-        self.fiber.with_stack(|stack| {
-            stack.rset(arity, Value::from_object(bind.receiver))
-        });
+        self.fiber
+            .with_stack(|stack| stack.rset(arity, Value::from_object(bind.receiver)));
 
         return self.call(arity, bind.method);
     }
@@ -285,7 +283,6 @@ impl Runtime {
             stack.push(Value::from_object(root.erase()));
         });
     }
-
 
     #[inline]
     pub fn next_u32(&mut self) -> u32 {

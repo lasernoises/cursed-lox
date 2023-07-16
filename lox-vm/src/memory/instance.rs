@@ -1,8 +1,8 @@
-use lox_gc::{Trace, Gc, Tracer};
-use crate::memory::Class;
 use crate::interner::Symbol;
-use crate::value::Value;
+use crate::memory::Class;
 use crate::table::Table;
+use crate::value::Value;
+use lox_gc::{Gc, Trace, Tracer};
 use std::cell::UnsafeCell;
 
 pub struct Instance {
@@ -29,9 +29,7 @@ impl Instance {
     }
 
     fn fields(&self) -> &Table {
-        unsafe {
-            &*self.fields.get()
-        }
+        unsafe { &*self.fields.get() }
     }
 }
 

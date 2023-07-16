@@ -31,4 +31,3 @@ pub fn set_stdlib(vm: &mut VirtualMachine) {
         this
     });
 }
-

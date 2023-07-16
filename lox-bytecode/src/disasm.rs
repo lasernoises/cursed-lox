@@ -1,5 +1,5 @@
-use crate::opcode::Opcode;
 use crate::bytecode::Module;
+use crate::opcode::Opcode;
 
 pub fn disassemble_module(module: &Module) {
     println!("=== Start of Dump ===");
@@ -50,17 +50,67 @@ pub fn disassemble_chunk(chunk: &[u8], module: &Module) {
     for (offset, opcode) in chunk {
         let instruction = format!("{:?}", opcode);
         match opcode {
-            Opcode::Jump(relative)        => println!("{:04X} {:<18} {:04X}", offset, instruction, absolute(offset, relative)),
-            Opcode::JumpIfFalse(relative) => println!("{:04X} {:<18} {:04X}", offset, instruction, absolute(offset, relative)),
-            Opcode::DefineGlobal(index)   => println!("{:04X} {:<18} {}"    , offset, instruction, module.identifier(index as _)),
-            Opcode::GetGlobal(index)      => println!("{:04X} {:<18} {}"    , offset, instruction, module.identifier(index as _)),
-            Opcode::SetGlobal(index)      => println!("{:04X} {:<18} {}"    , offset, instruction, module.identifier(index as _)),
-            Opcode::Number(index)         => println!("{:04X} {:<18} {}"    , offset, instruction, module.number(index as _)),
-            Opcode::String(index)         => println!("{:04X} {:<18} {}"    , offset, instruction, module.string(index as _)),
-            Opcode::Invoke(_arity, index) => println!("{:04X} {:<18} {}"    , offset, instruction, module.identifier(index as _)),
-            Opcode::GetProperty(index)    => println!("{:04X} {:<18} {}"    , offset, instruction, module.identifier(index as _)),
-            Opcode::SetProperty(index)    => println!("{:04X} {:<18} {}"    , offset, instruction, module.identifier(index as _)),
-            _                             => println!("{:04X} {:<18}"       , offset, instruction),
+            Opcode::Jump(relative) => println!(
+                "{:04X} {:<18} {:04X}",
+                offset,
+                instruction,
+                absolute(offset, relative)
+            ),
+            Opcode::JumpIfFalse(relative) => println!(
+                "{:04X} {:<18} {:04X}",
+                offset,
+                instruction,
+                absolute(offset, relative)
+            ),
+            Opcode::DefineGlobal(index) => println!(
+                "{:04X} {:<18} {}",
+                offset,
+                instruction,
+                module.identifier(index as _)
+            ),
+            Opcode::GetGlobal(index) => println!(
+                "{:04X} {:<18} {}",
+                offset,
+                instruction,
+                module.identifier(index as _)
+            ),
+            Opcode::SetGlobal(index) => println!(
+                "{:04X} {:<18} {}",
+                offset,
+                instruction,
+                module.identifier(index as _)
+            ),
+            Opcode::Number(index) => println!(
+                "{:04X} {:<18} {}",
+                offset,
+                instruction,
+                module.number(index as _)
+            ),
+            Opcode::String(index) => println!(
+                "{:04X} {:<18} {}",
+                offset,
+                instruction,
+                module.string(index as _)
+            ),
+            Opcode::Invoke(_arity, index) => println!(
+                "{:04X} {:<18} {}",
+                offset,
+                instruction,
+                module.identifier(index as _)
+            ),
+            Opcode::GetProperty(index) => println!(
+                "{:04X} {:<18} {}",
+                offset,
+                instruction,
+                module.identifier(index as _)
+            ),
+            Opcode::SetProperty(index) => println!(
+                "{:04X} {:<18} {}",
+                offset,
+                instruction,
+                module.identifier(index as _)
+            ),
+            _ => println!("{:04X} {:<18}", offset, instruction),
         }
     }
 }

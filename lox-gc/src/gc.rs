@@ -1,5 +1,10 @@
-use std::{ptr::NonNull, ops::Deref, any::TypeId, cell::{Cell, RefCell}};
 use crate::heap;
+use std::{
+    any::TypeId,
+    cell::{Cell, RefCell},
+    ops::Deref,
+    ptr::NonNull,
+};
 
 #[repr(C)]
 struct Allocation<T: ?Sized> {
@@ -76,9 +81,7 @@ impl ManagedHeap {
             } else {
                 finalizers.swap_remove(index);
 
-                unsafe {
-                    std::ptr::drop_in_place(ptr.dyn_data_mut() as *mut dyn Trace)
-                }
+                unsafe { std::ptr::drop_in_place(ptr.dyn_data_mut() as *mut dyn Trace) }
             }
         }
     }
@@ -87,7 +90,10 @@ impl ManagedHeap {
         self.heap.alloc(layout)
     }
 
-    pub fn manage<T>(&self, data: T) -> Gc<T> where T: Trace + 'static {
+    pub fn manage<T>(&self, data: T) -> Gc<T>
+    where
+        T: Trace + 'static,
+    {
         let layout = std::alloc::Layout::new::<Allocation<T>>();
         let ptr = self.heap.alloc(layout) as *mut Allocation<T>;
         unsafe {
@@ -102,7 +108,8 @@ impl ManagedHeap {
     pub fn collect(&self, roots: &[&dyn Trace]) {
         if self.heap.bytes_used() > self.threshold.get() {
             self.force_collect(roots);
-            self.threshold.set(((self.heap.bytes_used() as f32 * Self::THRESHOLD_ADJ) as usize) + 100);
+            self.threshold
+                .set(((self.heap.bytes_used() as f32 * Self::THRESHOLD_ADJ) as usize) + 100);
         }
     }
 
@@ -111,14 +118,12 @@ impl ManagedHeap {
             self.heap.start_gc();
         }
 
-        let mut tracer = Tracer {
-            heap: self,
-        };
+        let mut tracer = Tracer { heap: self };
 
         for root in roots {
             root.trace(&mut tracer);
         }
-        
+
         self.force_finalize();
 
         unsafe {
@@ -146,21 +151,28 @@ impl<T: ?Sized> Gc<T> {
 }
 
 impl Gc<()> {
-    pub fn is<T>(self) -> bool where T: 'static {
+    pub fn is<T>(self) -> bool
+    where
+        T: 'static,
+    {
         self.allocation().tag == TypeId::of::<T>()
     }
 
-    pub fn cast<T>(self) -> Gc<T> where T: 'static {
+    pub fn cast<T>(self) -> Gc<T>
+    where
+        T: 'static,
+    {
         debug_assert!(self.is::<T>());
 
         Gc {
-            ptr: unsafe {
-                NonNull::new_unchecked(self.ptr.as_ptr() as *mut Allocation<T>)
-            },
+            ptr: unsafe { NonNull::new_unchecked(self.ptr.as_ptr() as *mut Allocation<T>) },
         }
     }
 
-    pub fn try_cast<T>(self) -> Option<Gc<T>> where T: 'static {
+    pub fn try_cast<T>(self) -> Option<Gc<T>>
+    where
+        T: 'static,
+    {
         if self.is::<T>() {
             Some(self.cast::<T>())
         } else {
@@ -176,9 +188,7 @@ impl<T> Gc<T> {
 
     pub fn erase(self) -> Gc<()> {
         Gc {
-            ptr: unsafe {
-                NonNull::new_unchecked(self.ptr.as_ptr() as *mut Allocation<()>)
-            },
+            ptr: unsafe { NonNull::new_unchecked(self.ptr.as_ptr() as *mut Allocation<()>) },
         }
     }
 
@@ -200,9 +210,7 @@ impl<T: ?Sized> Deref for Gc<T> {
 
     #[inline]
     fn deref(&self) -> &T {
-        let allocation = unsafe {
-            self.ptr.as_ref()
-        };
+        let allocation = unsafe { self.ptr.as_ref() };
 
         &allocation.data
     }
@@ -214,7 +222,10 @@ impl<T: ?Sized> PartialEq for Gc<T> {
     }
 }
 
-impl<T: ?Sized> std::fmt::Display for Gc<T> where T: std::fmt::Display {
+impl<T: ?Sized> std::fmt::Display for Gc<T>
+where
+    T: std::fmt::Display,
+{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.deref().fmt(f)
     }
@@ -222,9 +233,7 @@ impl<T: ?Sized> std::fmt::Display for Gc<T> where T: std::fmt::Display {
 
 impl<T: ?Sized> Gc<T> {
     fn allocation(&self) -> &Allocation<T> {
-        unsafe {
-            self.ptr.as_ref()
-        }
+        unsafe { self.ptr.as_ref() }
     }
 
     fn dyn_data(&self) -> &dyn Trace {
@@ -276,20 +285,14 @@ mod vtable {
 
     pub unsafe fn construct<'a>(data: *const (), vtable: *mut ()) -> &'a dyn Trace {
         unsafe {
-            let object = Object {
-                data,
-                vtable,
-            };
+            let object = Object { data, vtable };
             std::mem::transmute::<Object, &dyn Trace>(object)
         }
     }
 
     pub unsafe fn construct_mut<'a>(data: *mut (), vtable: *mut ()) -> &'a mut dyn Trace {
         unsafe {
-            let object = Object {
-                data,
-                vtable,
-            };
+            let object = Object { data, vtable };
             std::mem::transmute::<Object, &mut dyn Trace>(object)
         }
     }
@@ -297,10 +300,10 @@ mod vtable {
 
 mod trace_impls {
     use super::*;
+    use arrayvec::ArrayVec;
+    use std::cell::{Cell, UnsafeCell};
     use std::collections::HashMap;
     use std::hash::Hash;
-    use std::cell::{UnsafeCell, Cell};
-    use arrayvec::ArrayVec;
 
     unsafe impl Trace for String {
         fn trace(&self, _tracer: &mut Tracer) {}
@@ -343,7 +346,10 @@ mod trace_impls {
         }
     }
 
-    unsafe impl<T> Trace for Cell<T> where T: Trace + Copy + Clone {
+    unsafe impl<T> Trace for Cell<T>
+    where
+        T: Trace + Copy + Clone,
+    {
         fn trace(&self, tracer: &mut Tracer) {
             self.get().trace(tracer);
         }
@@ -366,7 +372,6 @@ mod test {
     unsafe impl Trace for u32 {
         fn trace(&self, _tracer: &mut Tracer) {}
     }
-
 
     #[test]
     fn it_works() {

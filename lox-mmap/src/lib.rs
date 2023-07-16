@@ -31,7 +31,6 @@ impl MemoryMap {
             Self { size, data }
         }
     }
-
 }
 
 #[cfg(miri)]

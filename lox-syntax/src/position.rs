@@ -1,4 +1,3 @@
-
 #[derive(Debug, Copy, Clone, PartialEq, PartialOrd, Eq, Ord, Default)]
 pub struct BytePos(pub u32);
 
@@ -107,7 +106,7 @@ pub struct LineOffsets {
 }
 
 /// Helper struct to convert BytePos into line numbers.
-/// 
+///
 /// # Examples
 /// ```
 /// use lox_syntax::position::{LineOffsets, BytePos};
@@ -125,14 +124,11 @@ impl LineOffsets {
 
         for (i, val) in data.bytes().enumerate() {
             if val == b'\n' {
-                offsets.push((i+1) as u32);
+                offsets.push((i + 1) as u32);
             }
         }
 
-        Self {
-            offsets,
-            len,
-        }
+        Self { offsets, len }
     }
 
     pub fn line(&self, pos: BytePos) -> usize {

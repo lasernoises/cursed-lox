@@ -30,7 +30,11 @@ pub enum LogicalOperator {
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Expr {
-    Binary(Box<WithSpan<Expr>>, WithSpan<BinaryOperator>, Box<WithSpan<Expr>>),
+    Binary(
+        Box<WithSpan<Expr>>,
+        WithSpan<BinaryOperator>,
+        Box<WithSpan<Expr>>,
+    ),
     Grouping(Box<WithSpan<Expr>>),
     Number(f64),
     Boolean(bool),
@@ -40,14 +44,26 @@ pub enum Expr {
     String(String),
     Unary(WithSpan<UnaryOperator>, Box<WithSpan<Expr>>),
     Variable(WithSpan<Identifier>),
-    Logical(Box<WithSpan<Expr>>, WithSpan<LogicalOperator>, Box<WithSpan<Expr>>),
+    Logical(
+        Box<WithSpan<Expr>>,
+        WithSpan<LogicalOperator>,
+        Box<WithSpan<Expr>>,
+    ),
     Assign(WithSpan<Identifier>, Box<WithSpan<Expr>>),
     Call(Box<WithSpan<Expr>>, Vec<WithSpan<Expr>>),
     Get(Box<WithSpan<Expr>>, WithSpan<Identifier>),
-    Set(Box<WithSpan<Expr>>, WithSpan<Identifier>, Box<WithSpan<Expr>>),
+    Set(
+        Box<WithSpan<Expr>>,
+        WithSpan<Identifier>,
+        Box<WithSpan<Expr>>,
+    ),
     List(Vec<WithSpan<Expr>>),
     ListGet(Box<WithSpan<Expr>>, Box<WithSpan<Expr>>),
-    ListSet(Box<WithSpan<Expr>>, Box<WithSpan<Expr>>, Box<WithSpan<Expr>>),
+    ListSet(
+        Box<WithSpan<Expr>>,
+        Box<WithSpan<Expr>>,
+        Box<WithSpan<Expr>>,
+    ),
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -55,11 +71,19 @@ pub enum Stmt {
     Expression(Box<WithSpan<Expr>>),
     Print(Box<WithSpan<Expr>>),
     Var(WithSpan<Identifier>, Option<Box<WithSpan<Expr>>>),
-    If(Box<WithSpan<Expr>>, Box<WithSpan<Stmt>>, Option<Box<WithSpan<Stmt>>>),
+    If(
+        Box<WithSpan<Expr>>,
+        Box<WithSpan<Stmt>>,
+        Option<Box<WithSpan<Stmt>>>,
+    ),
     Block(Vec<WithSpan<Stmt>>),
     While(Box<WithSpan<Expr>>, Box<WithSpan<Stmt>>),
     Return(Option<Box<WithSpan<Expr>>>),
-    Function(WithSpan<Identifier>, Vec<WithSpan<Identifier>>, Vec<WithSpan<Stmt>>),
+    Function(
+        WithSpan<Identifier>,
+        Vec<WithSpan<Identifier>>,
+        Vec<WithSpan<Stmt>>,
+    ),
     Class(
         WithSpan<Identifier>,
         Option<WithSpan<Identifier>>,

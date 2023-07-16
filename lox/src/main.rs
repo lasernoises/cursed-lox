@@ -1,9 +1,9 @@
 use std::env;
 
-use lox_compiler::LineOffsets;
-use lox_vm::VirtualMachine;
-use lox_std::set_stdlib;
 use lox_bytecode::bytecode::Module;
+use lox_compiler::LineOffsets;
+use lox_std::set_stdlib;
+use lox_vm::VirtualMachine;
 
 #[cfg(test)]
 mod tests;
@@ -29,7 +29,7 @@ fn main() {
                 eprintln!("Error: {msg} at line {line}");
             }
             return;
-        },
+        }
     };
 
     // Run virtual machine
@@ -53,6 +53,6 @@ fn import(path: &str) -> Option<Module> {
             }
 
             None
-        },
+        }
     }
 }

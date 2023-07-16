@@ -87,12 +87,18 @@ impl Value {
     }
 
     #[inline]
-    pub fn is_object_of_type<T>(self) -> bool where T: 'static {
+    pub fn is_object_of_type<T>(self) -> bool
+    where
+        T: 'static,
+    {
         self.is_object() && self.as_object().is::<T>()
     }
 
     #[inline]
-    pub fn try_cast<T>(self) -> Option<Gc<T>> where T: 'static {
+    pub fn try_cast<T>(self) -> Option<Gc<T>>
+    where
+        T: 'static,
+    {
         if self.is_object() && self.as_object().is::<T>() {
             Some(self.as_object().cast::<T>())
         } else {

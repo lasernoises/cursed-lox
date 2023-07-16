@@ -1,10 +1,10 @@
 use crate::array::Array;
-use std::ops::{Deref, DerefMut};
-use std::str;
+use lox_gc::{Trace, Tracer};
 use std::borrow::{Borrow, BorrowMut};
 use std::fmt;
 use std::hash::Hash;
-use lox_gc::{Trace, Tracer};
+use std::ops::{Deref, DerefMut};
+use std::str;
 
 pub struct LoxString {
     vec: Array<u8>,
@@ -12,9 +12,7 @@ pub struct LoxString {
 
 impl LoxString {
     pub fn new() -> Self {
-        Self {
-            vec: Array::new(),
-        }
+        Self { vec: Array::new() }
     }
 
     pub fn as_bytes(&self) -> &[u8] {

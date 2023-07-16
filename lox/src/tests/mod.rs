@@ -45,7 +45,7 @@ fn execute(source: &str) -> (Vec<String>, TestResult) {
         Err(err) => {
             println!("Runtime error: {:?}", err);
             TestResult::RuntimeError
-        },
+        }
     };
 
     let output = {
@@ -1101,7 +1101,9 @@ mod super_tests {
     #[test]
     #[ignore = "not yet implemented"]
     fn super_in_closure_in_inherited_method() {
-        harness(include_str!("super/super_in_closure_in_inherited_method.lox"));
+        harness(include_str!(
+            "super/super_in_closure_in_inherited_method.lox"
+        ));
     }
 
     #[test]

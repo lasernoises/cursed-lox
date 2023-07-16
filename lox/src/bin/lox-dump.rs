@@ -1,5 +1,5 @@
-use std::env;
 use lox_compiler::LineOffsets;
+use std::env;
 
 fn main() {
     let args: Vec<String> = env::args().skip(1).collect();
@@ -22,7 +22,7 @@ fn main() {
                 eprintln!("Error: {msg} at line {line}");
             }
             return;
-        },
+        }
     };
 
     lox_bytecode::disasm::disassemble_module(&module);

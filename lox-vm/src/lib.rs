@@ -1,23 +1,23 @@
-pub mod memory;
 pub mod interner;
+pub mod memory;
 pub mod value;
 
+mod fiber;
+mod ops;
 mod runtime;
 mod stack;
-mod ops;
-mod fiber;
 mod table;
 
 //TODO Move to lox-gc
 mod array;
 mod string;
 
-use lox_bytecode::bytecode::Module;
-use runtime::Runtime;
 use interner::Symbol;
-use memory::{Import, NativeFunction, Class};
-use value::Value;
+use lox_bytecode::bytecode::Module;
 use lox_gc::{Gc, Trace};
+use memory::{Class, Import, NativeFunction};
+use runtime::Runtime;
+use value::Value;
 
 pub use runtime::VmError;
 
@@ -65,20 +65,37 @@ impl Native<'_> {
         lox_gc::manage(value)
     }
 
-    pub fn build_fn(&self, identifier: &str, code: fn(Value, &[Value]) -> Value) -> Gc<NativeFunction> {
-        lox_gc::manage((NativeFunction {
-            name: identifier.into(),
-            code,
-        }).into())
+    pub fn build_fn(
+        &self,
+        identifier: &str,
+        code: fn(Value, &[Value]) -> Value,
+    ) -> Gc<NativeFunction> {
+        lox_gc::manage(
+            (NativeFunction {
+                name: identifier.into(),
+                code,
+            })
+            .into(),
+        )
     }
 
-    pub fn set_fn(&mut self, import: Gc<Import>, identifier: &str, code: fn(Value, &[Value]) -> Value) {
+    pub fn set_fn(
+        &mut self,
+        import: Gc<Import>,
+        identifier: &str,
+        code: fn(Value, &[Value]) -> Value,
+    ) {
         let root = self.build_fn(identifier, code);
         let identifier = self.runtime.interner.intern(identifier);
         import.set_global(identifier, Value::from_object(root.erase()))
     }
 
-    pub fn set_method(&mut self, class: Gc<Class>, identifier: &str, code: fn(Value, &[Value]) -> Value) {
+    pub fn set_method(
+        &mut self,
+        class: Gc<Class>,
+        identifier: &str,
+        code: fn(Value, &[Value]) -> Value,
+    ) {
         let root = self.build_fn(identifier, code);
         let identifier = self.runtime.interner.intern(identifier);
         class.set_method(identifier, Value::from_object(root.erase()));

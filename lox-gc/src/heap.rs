@@ -1,15 +1,15 @@
-use std::cell::Cell;
 use lox_mmap::MemoryMap;
+use std::cell::Cell;
 
 //TODO Merge reams when sweeping
 
 /// Returns the number of pages needed for `n` bytes (rounding up).
 const fn bytes_to_pages(n: usize) -> usize {
-  if n % AddrSpace::PAGE_BYTES != 0 {
-    n / AddrSpace::PAGE_BYTES + 1
-  } else {
-    n / AddrSpace::PAGE_BYTES
-  }
+    if n % AddrSpace::PAGE_BYTES != 0 {
+        n / AddrSpace::PAGE_BYTES + 1
+    } else {
+        n / AddrSpace::PAGE_BYTES
+    }
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -27,11 +27,12 @@ impl AddrSpace {
     const PAGE_BYTES: usize = 4096;
 
     const DATA_BYTES: usize = 4 * 1024 * 1024 * 1024; // 4G
-    //const DATA_BYTES: usize = 64 * 1024 * 1024; // 64MB
-    //const DATA_BYTES: usize = 32 * 1024 * 1024; // 32MB
+                                                      //const DATA_BYTES: usize = 64 * 1024 * 1024; // 64MB
+                                                      //const DATA_BYTES: usize = 32 * 1024 * 1024; // 32MB
     const DATA_PAGES: usize = Self::DATA_BYTES / Self::PAGE_BYTES;
 
-    const PD_PAGES: usize = bytes_to_pages(Self::DATA_PAGES * std::mem::size_of::<PageDescriptor>());
+    const PD_PAGES: usize =
+        bytes_to_pages(Self::DATA_PAGES * std::mem::size_of::<PageDescriptor>());
     const BITMAP_PAGES: usize = bytes_to_pages(Self::DATA_PAGES * std::mem::size_of::<Bitmap>());
 
     const PD_BYTES: usize = Self::PD_PAGES * Self::PAGE_BYTES;
@@ -55,10 +56,7 @@ impl AddrSpace {
 
     /// Constructs a [`PdRef`] for the specified [`PdIdx`].
     pub unsafe fn pd(&self, idx: PdIdx) -> PdRef {
-        PdRef {
-            idx,
-            space: self,
-        }
+        PdRef { idx, space: self }
     }
 
     /// Constructs a [`PdRef`] for the specified index.
@@ -86,9 +84,7 @@ impl AddrSpace {
                 return None;
             }
 
-            let pd = unsafe {
-                self.pd_at(index)
-            };
+            let pd = unsafe { self.pd_at(index) };
 
             index += pd.pages() as u32;
 
@@ -102,7 +98,11 @@ impl AddrSpace {
     }
 
     pub(crate) fn new_reserved(&self) -> PdList {
-        debug_assert_eq!(self.reserved_pds.get(), self.used_pds.get(), "You cannot call new_reserved after init");
+        debug_assert_eq!(
+            self.reserved_pds.get(),
+            self.used_pds.get(),
+            "You cannot call new_reserved after init"
+        );
 
         let ream = self.new_ream(1);
         self.reserved_pds.set(self.reserved_pds.get() + 1);
@@ -116,22 +116,29 @@ impl AddrSpace {
         debug_assert!(count > 0);
         debug_assert!((used_pages + count) as usize <= Self::DATA_PAGES);
 
-        self.used_pds.set(used_pages+count);
+        self.used_pds.set(used_pages + count);
 
         unsafe {
-            let ptr = self.mem.data().cast::<PageDescriptor>().add(used_pages as _);
+            let ptr = self
+                .mem
+                .data()
+                .cast::<PageDescriptor>()
+                .add(used_pages as _);
             ptr.write_bytes(0, count as _);
 
-            let ptr = self.mem.data().add(Self::PD_BYTES).cast::<Bitmap>().add(used_pages as _);
+            let ptr = self
+                .mem
+                .data()
+                .add(Self::PD_BYTES)
+                .cast::<Bitmap>()
+                .add(used_pages as _);
             ptr.write_bytes(0, count as _);
         }
 
-        let page = unsafe {
-            self.pd_at(used_pages)
-        };
+        let page = unsafe { self.pd_at(used_pages) };
 
         unsafe { page.force_unlink() };
-        page.pd().len.set(count-1);
+        page.pd().len.set(count - 1);
         page
     }
 }
@@ -296,9 +303,7 @@ impl<'space> PdRef<'space> {
             + self.idx.0 as usize * AddrSpace::PAGE_BYTES
             + index * self.class().block_bytes().unwrap_or(1);
 
-        unsafe {
-            self.space.mem.data().add(offset)
-        }
+        unsafe { self.space.mem.data().add(offset) }
     }
 
     pub fn mark(self, index: usize) {
@@ -375,7 +380,7 @@ impl<'space> PdRef<'space> {
             let idx = word.get().trailing_ones() as usize;
             word.set(word.get() | 1 << idx);
 
-            return Some(index*64 + idx);
+            return Some(index * 64 + idx);
         }
 
         None
@@ -391,9 +396,7 @@ impl<'space> PdRef<'space> {
             None
         } else {
             let rest_len = self.pages() - split - 1;
-            let rest = unsafe {
-                self.space.pd_at(self.idx.0 + split as u32)
-            };
+            let rest = unsafe { self.space.pd_at(self.idx.0 + split as u32) };
             unsafe { rest.force_unlink() };
             rest.pd().len.set(rest_len as _);
 
@@ -412,15 +415,11 @@ struct PdList {
 
 impl PdList {
     pub fn new(root: PdIdx) -> Self {
-        Self {
-            root,
-        }
+        Self { root }
     }
 
     pub fn iter<'space>(&self, space: &'space AddrSpace) -> impl Iterator<Item = PdRef<'space>> {
-        let root = unsafe {
-            space.pd(self.root)
-        };
+        let root = unsafe { space.pd(self.root) };
 
         let mut current = root.next();
 
@@ -438,9 +437,7 @@ impl PdList {
     }
 
     pub fn first<'space>(&self, space: &'space AddrSpace) -> Option<PdRef<'space>> {
-        let root = unsafe {
-            space.pd(self.root)
-        };
+        let root = unsafe { space.pd(self.root) };
 
         if root.next().idx != root.idx {
             Some(root.next())
@@ -450,9 +447,7 @@ impl PdList {
     }
 
     pub fn push(&self, item: PdRef) {
-        let root = unsafe {
-            item.space.pd(self.root)
-        };
+        let root = unsafe { item.space.pd(self.root) };
 
         let next = root.next();
 
@@ -524,8 +519,7 @@ impl Heap {
     }
 
     pub unsafe fn start_gc(&self) {
-        self.space.pds()
-            .for_each(|pd| pd.set_empty());
+        self.space.pds().for_each(|pd| pd.set_empty());
     }
 
     pub unsafe fn mark(&self, ptr: *const u8) {
@@ -577,7 +571,10 @@ impl Heap {
         #[inline(never)]
         #[cold]
         fn alloc_failed(pages: u32) -> ! {
-            panic!("No ream of sufficient size available, requested {} pages", pages);
+            panic!(
+                "No ream of sufficient size available, requested {} pages",
+                pages
+            );
         }
 
         for ream in self.free_reams.iter(&self.space) {
@@ -589,10 +586,10 @@ impl Heap {
             match rest {
                 Some(r) if r.is_single_page() => {
                     self.free_pages.push(r);
-                },
+                }
                 Some(r) => {
                     self.free_reams.push(r);
-                },
+                }
                 None => (),
             };
 
@@ -604,7 +601,8 @@ impl Heap {
     }
 
     fn alloc_ream(&self, pages: u32) -> *mut u8 {
-        self.bytes_used.set(self.bytes_used.get() + pages as usize * AddrSpace::PAGE_BYTES);
+        self.bytes_used
+            .set(self.bytes_used.get() + pages as usize * AddrSpace::PAGE_BYTES);
         let page = self.take_ream(pages);
 
         page.set_class(SizeClass::Ream);
@@ -615,7 +613,8 @@ impl Heap {
     }
 
     fn alloc_small(&self, size_class: SizeClass) -> *mut u8 {
-        self.bytes_used.set(self.bytes_used.get() + size_class.block_bytes().unwrap());
+        self.bytes_used
+            .set(self.bytes_used.get() + size_class.block_bytes().unwrap());
 
         let list = self.sized_list(size_class);
 
@@ -626,7 +625,7 @@ impl Heap {
                     Some(page) => {
                         page.unlink();
                         page
-                    },
+                    }
                     None => self.take_ream(1),
                 };
 
@@ -634,7 +633,7 @@ impl Heap {
                 page.set_class(size_class);
                 page.set_empty();
                 page
-            },
+            }
         };
 
         let index = page.take_next_block().expect("Full page in free list");
@@ -665,7 +664,9 @@ mod tests {
             assert_eq!(ptr.read(), 1234);
         };
 
-        unsafe { heap.start_gc(); }
+        unsafe {
+            heap.start_gc();
+        }
         assert_eq!(heap.is_marked(ptr as *const u8), false);
 
         unsafe {

@@ -1,14 +1,14 @@
-use lox_bytecode::bytecode::{Chunk, ConstantIndex, Module, ClosureIndex, ClassIndex};
-use lox_gc::{Trace, Gc, Tracer};
-use std::cell::UnsafeCell;
-use crate::interner::{Symbol, Interner};
-use lox_bytecode::bytecode;
+use crate::array::Array;
+use crate::interner::{Interner, Symbol};
+use crate::string::LoxString;
 use crate::table::Table;
 use crate::value::Value;
-use crate::array::Array;
-use crate::string::LoxString;
+use lox_bytecode::bytecode;
+use lox_bytecode::bytecode::{Chunk, ClassIndex, ClosureIndex, ConstantIndex, Module};
+use lox_gc::{Gc, Trace, Tracer};
+use std::cell::UnsafeCell;
 
-//TODO Drop module 
+//TODO Drop module
 pub struct Import {
     pub name: LoxString,
     module: Module,
@@ -38,14 +38,22 @@ impl Import {
         }
     }
 
-    pub(crate) fn with_module(name: impl Into<LoxString>, module: Module, interner: &mut Interner) -> Self {
-        let symbols = module.identifiers().iter().map(|identifier| {
-            interner.intern(identifier)
-        }).collect();
+    pub(crate) fn with_module(
+        name: impl Into<LoxString>,
+        module: Module,
+        interner: &mut Interner,
+    ) -> Self {
+        let symbols = module
+            .identifiers()
+            .iter()
+            .map(|identifier| interner.intern(identifier))
+            .collect();
 
-        let strings: Array<Gc<LoxString>> = module.strings.iter().map(|value| {
-            lox_gc::manage(value.into())
-        }).collect();
+        let strings: Array<Gc<LoxString>> = module
+            .strings
+            .iter()
+            .map(|value| lox_gc::manage(value.into()))
+            .collect();
 
         Self {
             name: name.into(),
@@ -62,16 +70,12 @@ impl Import {
     }
 
     fn globals(&self) -> &Table {
-        unsafe {
-            &*self.globals.get()
-        }
+        unsafe { &*self.globals.get() }
     }
 
     #[inline]
     pub(crate) fn symbol(&self, index: ConstantIndex) -> Symbol {
-        unsafe {
-            *self.symbols.get_unchecked(index)
-        }
+        unsafe { *self.symbols.get_unchecked(index) }
     }
 
     pub(crate) fn chunk(&self, index: usize) -> &Chunk {
@@ -85,9 +89,7 @@ impl Import {
 
     #[inline]
     pub(crate) fn string(&self, index: ConstantIndex) -> Gc<LoxString> {
-        unsafe {
-            *self.strings.get_unchecked(index)
-        }
+        unsafe { *self.strings.get_unchecked(index) }
     }
 
     //TODO rename to make it clear this is not an alive closure.

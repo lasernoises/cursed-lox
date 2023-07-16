@@ -79,9 +79,7 @@ impl Module {
 
     #[inline]
     pub fn chunk(&self, index: ChunkIndex) -> &Chunk {
-        unsafe {
-            self.chunks.get_unchecked(index)
-        }
+        unsafe { self.chunks.get_unchecked(index) }
     }
 
     pub fn chunk_mut(&mut self, index: ChunkIndex) -> &mut Chunk {
@@ -132,16 +130,12 @@ impl Module {
 
     #[inline]
     pub fn number(&self, index: ConstantIndex) -> f64 {
-        unsafe {
-            *self.numbers.get_unchecked(index)
-        }
+        unsafe { *self.numbers.get_unchecked(index) }
     }
 
     #[inline]
     pub fn string(&self, index: ConstantIndex) -> &str {
-        unsafe {
-            self.strings.get_unchecked(index)
-        }
+        unsafe { self.strings.get_unchecked(index) }
     }
 
     #[inline]
@@ -206,14 +200,14 @@ impl Chunk {
     pub fn set_i16(&mut self, index: InstructionIndex, value: i16) {
         let bytes = value.to_le_bytes();
         for i in 0..2 {
-            self.instructions[index+i] = bytes[i];
+            self.instructions[index + i] = bytes[i];
         }
     }
 
     pub fn set_u32(&mut self, index: InstructionIndex, value: u32) {
         let bytes = value.to_le_bytes();
         for i in 0..4 {
-            self.instructions[index+i] = bytes[i];
+            self.instructions[index + i] = bytes[i];
         }
     }
 
@@ -246,7 +240,7 @@ impl Chunk {
     }
 
     pub fn get_u32(&self, pc: usize) -> u32 {
-        let bytes = unsafe { self.instructions.get_unchecked(pc..pc+4) };
+        let bytes = unsafe { self.instructions.get_unchecked(pc..pc + 4) };
         u32::from_le_bytes(bytes.try_into().unwrap())
     }
 }

@@ -1,20 +1,20 @@
-mod import;
-mod list;
-mod closure;
-mod upvalue;
-mod instance;
-mod class;
-mod native_function;
 mod bound_method;
+mod class;
+mod closure;
+mod import;
+mod instance;
+mod list;
+mod native_function;
+mod upvalue;
 
-pub use import::*;
-pub use list::*;
-pub use closure::*;
-pub use upvalue::*;
-pub use instance::*;
-pub use class::*;
-pub use native_function::*;
 pub use bound_method::*;
+pub use class::*;
+pub use closure::*;
+pub use import::*;
+pub use instance::*;
+pub use list::*;
+pub use native_function::*;
+pub use upvalue::*;
 
 use crate::string::LoxString;
 use lox_gc::Gc;
@@ -36,7 +36,7 @@ pub fn print(value: Gc<()>, f: &mut fmt::Formatter<'_>) -> fmt::Result {
     } else if value.is::<Instance>() {
         write!(f, "{} instance", value.cast::<Instance>().class.name)
     } else if value.is::<Import>() {
-        write!(f, "<import {}>", value.cast:: <Import>().name)
+        write!(f, "<import {}>", value.cast::<Import>().name)
     } else if value.is::<List>() {
         write!(f, "{}", value.cast::<List>())
     } else {

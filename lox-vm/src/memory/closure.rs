@@ -1,10 +1,10 @@
-use lox_bytecode::bytecode;
-use std::cell::Cell;
-use lox_gc::{Gc, Trace, Tracer};
-use crate::memory::{Import, Upvalue};
 use crate::fiber::Fiber;
-use arrayvec::ArrayVec;
+use crate::memory::{Import, Upvalue};
 use crate::string::LoxString;
+use arrayvec::ArrayVec;
+use lox_bytecode::bytecode;
+use lox_gc::{Gc, Trace, Tracer};
+use std::cell::Cell;
 
 pub struct Closure {
     pub function: Function,
@@ -30,8 +30,8 @@ pub struct Function {
 impl std::fmt::Debug for Function {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Function")
-        .field("name", &self.name)
-        .finish()
+            .field("name", &self.name)
+            .finish()
     }
 }
 
@@ -45,7 +45,6 @@ impl Function {
         }
     }
 }
-
 
 impl Closure {
     pub(crate) fn with_import(import: Gc<Import>) -> Self {
@@ -72,25 +71,21 @@ impl Closure {
         let upvalues = closure
             .upvalues
             .iter()
-            .map(|u| {
-                match u {
-                    bytecode::Upvalue::Local(index) => {
-                        let index = base + index;
+            .map(|u| match u {
+                bytecode::Upvalue::Local(index) => {
+                    let index = base + index;
 
-                        if let Some(upvalue) = fiber.find_open_upvalue_with_index(index) {
-                            upvalue
-                        } else {
-                            let root = lox_gc::manage(Cell::new(Upvalue::Open(index, fiber)));
-                            fiber.push_upvalue(root);
-                            root
-                        }
-                    }
-                    bytecode::Upvalue::Upvalue(u) => {
-                        fiber.find_upvalue_by_index(*u)
+                    if let Some(upvalue) = fiber.find_open_upvalue_with_index(index) {
+                        upvalue
+                    } else {
+                        let root = lox_gc::manage(Cell::new(Upvalue::Open(index, fiber)));
+                        fiber.push_upvalue(root);
+                        root
                     }
                 }
+                bytecode::Upvalue::Upvalue(u) => fiber.find_upvalue_by_index(*u),
             })
-        .collect();
+            .collect();
 
         Self {
             function: Function::new(&closure.function, import),

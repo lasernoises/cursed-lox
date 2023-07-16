@@ -1,8 +1,8 @@
 use lox_gc::{Trace, Tracer};
-use std::ptr::{self, NonNull};
+use std::alloc::Layout;
 use std::mem;
 use std::ops::{Deref, DerefMut};
-use std::alloc::Layout;
+use std::ptr::{self, NonNull};
 
 pub struct Array<T> {
     ptr: NonNull<T>,
@@ -31,7 +31,10 @@ impl<T> FromIterator<T> for Array<T> {
     }
 }
 
-impl<T> Array<T> where T: Copy {
+impl<T> Array<T>
+where
+    T: Copy,
+{
     pub fn with_contents(elem: T, size: usize) -> Self {
         let mut array = Self::with_capacity(size);
 
@@ -43,7 +46,10 @@ impl<T> Array<T> where T: Copy {
     }
 }
 
-impl<T> Array<T> where T: Clone {
+impl<T> Array<T>
+where
+    T: Clone,
+{
     //TODO rewrite.
     pub fn extend_from_slice(&mut self, other: &[T]) {
         for elem in other {
@@ -95,7 +101,9 @@ impl<T> Array<T> {
     }
 
     pub fn push(&mut self, value: T) {
-        if self.len == self.cap { self.grow() }
+        if self.len == self.cap {
+            self.grow()
+        }
 
         unsafe {
             ptr::write(self.ptr.as_ptr().add(self.len), value);
@@ -110,9 +118,7 @@ impl<T> Array<T> {
         } else {
             self.len -= 1;
 
-            unsafe {
-                Some(ptr::read(self.ptr.as_ptr().add(self.len)))
-            }
+            unsafe { Some(ptr::read(self.ptr.as_ptr().add(self.len))) }
         }
     }
 
@@ -148,7 +154,10 @@ impl<T> Array<T> {
             (new_cap, new_layout)
         };
 
-        assert!(new_layout.size() <= isize::MAX as usize, "Allocation too large");
+        assert!(
+            new_layout.size() <= isize::MAX as usize,
+            "Allocation too large"
+        );
 
         let new_ptr = if self.cap == 0 {
             let new_ptr = unsafe { lox_gc::alloc(new_layout) };
@@ -171,7 +180,9 @@ impl<T> Array<T> {
     }
 
     pub fn mark(&self, tracer: &mut Tracer) {
-        if self.cap == 0 { return; }
+        if self.cap == 0 {
+            return;
+        }
 
         unsafe {
             tracer.mark(self.ptr.as_ptr() as *const u8);
@@ -183,21 +194,20 @@ impl<T> Deref for Array<T> {
     type Target = [T];
 
     fn deref(&self) -> &Self::Target {
-        unsafe {
-            std::slice::from_raw_parts(self.ptr.as_ptr(), self.len)
-        }
+        unsafe { std::slice::from_raw_parts(self.ptr.as_ptr(), self.len) }
     }
 }
 
 impl<T> DerefMut for Array<T> {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        unsafe {
-            std::slice::from_raw_parts_mut(self.ptr.as_ptr(), self.len)
-        }
+        unsafe { std::slice::from_raw_parts_mut(self.ptr.as_ptr(), self.len) }
     }
 }
 
-unsafe impl<T> Trace for Array<T> where T: Trace {
+unsafe impl<T> Trace for Array<T>
+where
+    T: Trace,
+{
     fn trace(&self, tracer: &mut Tracer) {
         self.mark(tracer);
 

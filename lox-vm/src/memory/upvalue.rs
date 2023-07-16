@@ -1,6 +1,6 @@
-use crate::value::Value;
-use lox_gc::{Trace, Tracer, Gc};
 use crate::fiber::Fiber;
+use crate::value::Value;
+use lox_gc::{Gc, Trace, Tracer};
 
 #[derive(Copy, Clone)]
 pub enum Upvalue {
@@ -24,9 +24,7 @@ impl Upvalue {
 
     pub const fn is_open_with_index(&self, index: usize) -> bool {
         match self {
-            Self::Open(i, _) => {
-                *i == index
-            }
+            Self::Open(i, _) => *i == index,
             Self::Closed(_) => false,
         }
     }

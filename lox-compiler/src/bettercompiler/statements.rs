@@ -1,9 +1,9 @@
 use super::compiler::Compiler;
 use super::compiler::ContextType;
 use crate::bytecode::*;
+use lox_bytecode::opcode;
 use lox_syntax::ast::*;
 use lox_syntax::position::WithSpan;
-use lox_bytecode::opcode;
 
 pub fn compile_ast(compiler: &mut Compiler, ast: &Ast) {
     for stmt in ast {
@@ -27,7 +27,8 @@ fn compile_stmt(compiler: &mut Compiler, stmt: &WithSpan<Stmt>) {
             compile_function(compiler, &identifier.as_ref(), args, stmts)
         }
         Stmt::Return(ref expr) => {
-            if compiler.context_type() == ContextType::Initializer && expr.is_some() { // Do Allow for early returns from init
+            if compiler.context_type() == ContextType::Initializer && expr.is_some() {
+                // Do Allow for early returns from init
                 compiler.add_error("Invalid return", stmt.span);
                 return;
             }
@@ -36,7 +37,7 @@ fn compile_stmt(compiler: &mut Compiler, stmt: &WithSpan<Stmt>) {
                 return;
             }
             compile_return(compiler, expr.as_ref())
-        },
+        }
         Stmt::Class(ref identifier, ref extends, ref stmts) => {
             compile_class(compiler, identifier.as_ref(), extends.as_ref(), stmts)
         }
@@ -65,7 +66,11 @@ fn define_variable(compiler: &mut Compiler, identifier: &str) {
     }
 }
 
-fn compile_import(compiler: &mut Compiler, path: &WithSpan<String>, identifiers: Option<&Vec<WithSpan<String>>>) {
+fn compile_import(
+    compiler: &mut Compiler,
+    path: &WithSpan<String>,
+    identifiers: Option<&Vec<WithSpan<String>>>,
+) {
     let constant = compiler.add_string(path.value.as_str());
     compiler.add_u8(opcode::IMPORT);
     compiler.add_u32(constant as _);
@@ -92,8 +97,8 @@ fn compile_class(
     stmts: &[WithSpan<Stmt>],
 ) {
     declare_variable(compiler, identifier.as_ref());
-    let constant = compiler.add_class(Class{
-        name: identifier.value.to_string()
+    let constant = compiler.add_class(Class {
+        name: identifier.value.to_string(),
     });
     compiler.add_u8(opcode::CLASS);
     compiler.add_u8(constant as _);
@@ -108,7 +113,7 @@ fn compile_class(
         match &stmt.value {
             Stmt::Function(identifier, args, block) => {
                 compile_method(compiler, identifier.as_ref(), args, block);
-            },
+            }
             _ => unimplemented!(), //TODO
         }
     }
@@ -122,8 +127,11 @@ fn compile_method(
     args: &Vec<WithSpan<Identifier>>,
     block: &Vec<WithSpan<Stmt>>,
 ) {
-
-    let context_type = if identifier.value == "init" { ContextType::Initializer } else { ContextType::Method };
+    let context_type = if identifier.value == "init" {
+        ContextType::Initializer
+    } else {
+        ContextType::Method
+    };
 
     compile_closure(compiler, &identifier, args, block, context_type);
 
@@ -132,10 +140,7 @@ fn compile_method(
     compiler.add_u32(constant as _);
 }
 
-fn compile_return<E: AsRef<WithSpan<Expr>>>(
-    compiler: &mut Compiler,
-    expr: Option<E>,
-) {
+fn compile_return<E: AsRef<WithSpan<Expr>>>(compiler: &mut Compiler, expr: Option<E>) {
     if let Some(expr) = expr {
         compile_expr(compiler, expr.as_ref());
     } else if compiler.context_type() == ContextType::Initializer {
@@ -148,14 +153,13 @@ fn compile_return<E: AsRef<WithSpan<Expr>>>(
 }
 
 fn compile_closure(
-    compiler: &mut Compiler, 
-    identifier: &WithSpan<&String>, 
-    args: &Vec<WithSpan<Identifier>>, 
+    compiler: &mut Compiler,
+    identifier: &WithSpan<&String>,
+    args: &Vec<WithSpan<Identifier>>,
     block: &Vec<WithSpan<Stmt>>,
-    context_type: ContextType
+    context_type: ContextType,
 ) {
-    let (chunk_index, upvalues) =
-    compiler.with_scoped_context(context_type, |compiler| {
+    let (chunk_index, upvalues) = compiler.with_scoped_context(context_type, |compiler| {
         for arg in args {
             declare_variable(compiler, arg.as_ref());
             define_variable(compiler, &arg.value);
@@ -175,10 +179,7 @@ fn compile_closure(
         arity: args.len(),
     };
 
-    let closure = Closure {
-        function,
-        upvalues,
-    };
+    let closure = Closure { function, upvalues };
 
     let constant = compiler.add_closure(closure);
     compiler.add_u8(opcode::CLOSURE);
@@ -201,11 +202,7 @@ fn compile_function(
     define_variable(compiler, identifier.value);
 }
 
-fn compile_while(
-    compiler: &mut Compiler,
-    condition: &WithSpan<Expr>,
-    body: &WithSpan<Stmt>,
-) {
+fn compile_while(compiler: &mut Compiler, condition: &WithSpan<Expr>, body: &WithSpan<Stmt>) {
     let loop_start = compiler.instruction_index();
     compile_expr(compiler, condition);
     compiler.add_u8(opcode::JUMP_IF_FALSE);
@@ -301,22 +298,29 @@ fn compile_expr(compiler: &mut Compiler, expr: &WithSpan<Expr>) {
         Expr::This => compile_this(compiler, expr),
         Expr::List(ref expr) => compile_list(compiler, expr),
         Expr::ListGet(ref list, ref expr) => compile_list_get(compiler, list, expr),
-        Expr::ListSet(ref list, ref index, ref value) => compile_list_set(compiler, list, index, value),
+        Expr::ListSet(ref list, ref index, ref value) => {
+            compile_list_set(compiler, list, index, value)
+        }
         ref expr => unimplemented!("{:?}", expr),
     }
 }
 
-fn compile_list_set(compiler: &mut Compiler, list: &WithSpan<Expr>, index: &WithSpan<Expr>, value: &WithSpan<Expr>) {
-        compile_expr(compiler, list);
-        compile_expr(compiler, index);
-        compile_expr(compiler, value);
-        compiler.add_u8(opcode::SET_INDEX);
+fn compile_list_set(
+    compiler: &mut Compiler,
+    list: &WithSpan<Expr>,
+    index: &WithSpan<Expr>,
+    value: &WithSpan<Expr>,
+) {
+    compile_expr(compiler, list);
+    compile_expr(compiler, index);
+    compile_expr(compiler, value);
+    compiler.add_u8(opcode::SET_INDEX);
 }
 
 fn compile_list_get(compiler: &mut Compiler, list: &WithSpan<Expr>, expr: &WithSpan<Expr>) {
-        compile_expr(compiler, list);
-        compile_expr(compiler, expr);
-        compiler.add_u8(opcode::GET_INDEX);
+    compile_expr(compiler, list);
+    compile_expr(compiler, expr);
+    compiler.add_u8(opcode::GET_INDEX);
 }
 
 fn compile_list(compiler: &mut Compiler, expr: &Vec<WithSpan<Expr>>) {
@@ -337,11 +341,7 @@ fn compile_this(compiler: &mut Compiler, expr: &WithSpan<Expr>) {
     compile_variable(compiler, WithSpan::new(&"this".to_string(), expr.span))
 }
 
-fn compile_get(
-    compiler: &mut Compiler,
-    expr: &WithSpan<Expr>,
-    identifier: WithSpan<&String>,
-) {
+fn compile_get(compiler: &mut Compiler, expr: &WithSpan<Expr>, identifier: WithSpan<&String>) {
     compile_expr(compiler, expr);
     let constant = compiler.add_identifier(identifier.value.as_str());
     compiler.add_u8(opcode::GET_PROPERTY);
@@ -373,11 +373,7 @@ fn compile_unary(
     };
 }
 
-fn compile_call(
-    compiler: &mut Compiler,
-    identifier: &WithSpan<Expr>,
-    args: &Vec<WithSpan<Expr>>,
-) {
+fn compile_call(compiler: &mut Compiler, identifier: &WithSpan<Expr>, args: &Vec<WithSpan<Expr>>) {
     if let Expr::Get(expr, ident) = &identifier.value {
         compile_expr(compiler, expr);
 
@@ -414,11 +410,7 @@ fn compile_logical(
 }
 
 //TODO Implement this better, using one less jump, we can easily introduce a JumpIfTrue instruction.
-fn compile_logical_or(
-    compiler: &mut Compiler,
-    left: &WithSpan<Expr>,
-    right: &WithSpan<Expr>,
-) {
+fn compile_logical_or(compiler: &mut Compiler, left: &WithSpan<Expr>, right: &WithSpan<Expr>) {
     compile_expr(compiler, left);
     compiler.add_u8(opcode::JUMP_IF_FALSE);
     let else_jump = compiler.add_i16(0);
@@ -430,11 +422,7 @@ fn compile_logical_or(
     compiler.patch_instruction(end_jump);
 }
 
-fn compile_logical_and(
-    compiler: &mut Compiler,
-    left: &WithSpan<Expr>,
-    right: &WithSpan<Expr>,
-) {
+fn compile_logical_and(compiler: &mut Compiler, left: &WithSpan<Expr>, right: &WithSpan<Expr>) {
     compile_expr(compiler, left);
     compiler.add_u8(opcode::JUMP_IF_FALSE);
     let end_jump = compiler.add_i16(0);
@@ -451,11 +439,7 @@ fn compile_boolean(compiler: &mut Compiler, boolean: bool) {
     }
 }
 
-fn compile_assign(
-    compiler: &mut Compiler,
-    identifier: WithSpan<&String>,
-    expr: &WithSpan<Expr>,
-) {
+fn compile_assign(compiler: &mut Compiler, identifier: WithSpan<&String>, expr: &WithSpan<Expr>) {
     compile_expr(compiler, expr);
     if let Some(local) = compiler.resolve_local(identifier.value) {
         // Local
@@ -473,10 +457,7 @@ fn compile_assign(
     }
 }
 
-fn compile_variable(
-    compiler: &mut Compiler,
-    identifier: WithSpan<&String>,
-) {
+fn compile_variable(compiler: &mut Compiler, identifier: WithSpan<&String>) {
     if let Some(local) = compiler.resolve_local(identifier.value) {
         // Local
         compiler.add_u8(opcode::GET_LOCAL);

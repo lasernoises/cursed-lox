@@ -1,6 +1,6 @@
+use crate::string::LoxString;
 use crate::value::Value;
 use lox_gc::{Trace, Tracer};
-use crate::string::LoxString;
 
 pub struct NativeFunction {
     pub name: LoxString,

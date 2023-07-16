@@ -8,9 +8,12 @@ pub fn expect_identifier(p: &mut Parser) -> Result<WithSpan<Identifier>, ()> {
     match &token.value {
         Token::Identifier(ident) => Ok(WithSpan::new(ident.clone(), token.span)),
         _ => {
-            p.error(&format!("Expected {} got {}", TokenKind::Identifier, token.value), token.span);
+            p.error(
+                &format!("Expected {} got {}", TokenKind::Identifier, token.value),
+                token.span,
+            );
             Err(())
-        },
+        }
     }
 }
 
@@ -19,8 +22,11 @@ pub fn expect_string(p: &mut Parser) -> Result<WithSpan<String>, ()> {
     match &token.value {
         Token::String(ident) => Ok(WithSpan::new(ident.clone(), token.span)),
         _ => {
-            p.error(&format!("Expected {} got {}", TokenKind::String, token.value), token.span);
+            p.error(
+                &format!("Expected {} got {}", TokenKind::String, token.value),
+                token.span,
+            );
             Err(())
-        },
+        }
     }
 }

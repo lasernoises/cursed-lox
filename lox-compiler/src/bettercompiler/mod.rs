@@ -7,10 +7,10 @@ mod tests;
 
 use crate::bytecode::*;
 use compiler::{Compiler, ContextType};
+use lox_bytecode::opcode;
 use lox_syntax::ast::*;
 use lox_syntax::position::Diagnostic;
 use statements::compile_ast;
-use lox_bytecode::opcode;
 
 pub fn compile(ast: &Ast) -> Result<Module, Vec<Diagnostic>> {
     let mut compiler = Compiler::new();

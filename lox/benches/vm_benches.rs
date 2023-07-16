@@ -20,7 +20,7 @@ fn execute(source: &str) -> TestResult {
         Err(err) => {
             println!("Runtime error: {:?}", err);
             TestResult::RuntimeError
-        },
+        }
     };
 
     result
@@ -31,25 +31,24 @@ fn criterion_benchmark(c: &mut Criterion) {
     let trees = include_str!("trees.lox");
     let fib = include_str!("fib.lox");
 
-    c.bench_with_input(
-        BenchmarkId::new("run", "zoo"),
-        &zoo,
-        |b, s| { b.iter(|| { execute(s); }); }
-    );
+    c.bench_with_input(BenchmarkId::new("run", "zoo"), &zoo, |b, s| {
+        b.iter(|| {
+            execute(s);
+        });
+    });
 
-    c.bench_with_input(
-        BenchmarkId::new("run", "trees"),
-        &trees,
-        |b, s| { b.iter(|| { execute(s); }); }
-    );
+    c.bench_with_input(BenchmarkId::new("run", "trees"), &trees, |b, s| {
+        b.iter(|| {
+            execute(s);
+        });
+    });
 
-    c.bench_with_input(
-        BenchmarkId::new("run", "fib"),
-        &fib,
-        |b, s| { b.iter(|| { execute(s); }); }
-    );
+    c.bench_with_input(BenchmarkId::new("run", "fib"), &fib, |b, s| {
+        b.iter(|| {
+            execute(s);
+        });
+    });
 }
 
 criterion_group!(benches, criterion_benchmark);
 criterion_main!(benches);
-

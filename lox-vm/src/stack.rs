@@ -8,13 +8,9 @@ pub struct StackBlock {
 
 impl StackBlock {
     pub fn new(size: usize) -> Self {
-        let stack = unsafe {
-            lox_gc::alloc(std::alloc::Layout::array::<Value>(size).unwrap())
-        };
+        let stack = unsafe { lox_gc::alloc(std::alloc::Layout::array::<Value>(size).unwrap()) };
 
-        Self {
-            stack,
-        }
+        Self { stack }
     }
 }
 
@@ -42,9 +38,7 @@ impl Stack {
 
     #[inline]
     pub fn len(&self) -> usize {
-        unsafe {
-            self.top.offset_from(self.bottom) as usize
-        }
+        unsafe { self.top.offset_from(self.bottom) as usize }
     }
 
     #[inline]
@@ -73,7 +67,7 @@ impl Stack {
     #[inline]
     pub fn rset(&mut self, n: usize, value: Value) {
         unsafe {
-            let ptr = self.top.sub(n+1);
+            let ptr = self.top.sub(n + 1);
             ptr::write(ptr, value);
         }
     }
@@ -97,7 +91,7 @@ impl Stack {
     #[inline]
     pub fn peek_n(&self, n: usize) -> Value {
         unsafe {
-            let ptr = self.top.sub(n+1);
+            let ptr = self.top.sub(n + 1);
             ptr::read(ptr)
         }
     }

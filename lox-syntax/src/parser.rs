@@ -1,4 +1,4 @@
-use crate::position::{WithSpan, Diagnostic, Span};
+use crate::position::{Diagnostic, Span, WithSpan};
 use crate::token::{Token, TokenKind};
 
 static EOF_TOKEN: WithSpan<Token> = WithSpan::empty(Token::Eof);
@@ -11,7 +11,11 @@ pub struct Parser<'a> {
 
 impl<'a> Parser<'a> {
     pub fn new(tokens: &'a [WithSpan<Token>]) -> Self {
-        Parser { tokens, cursor: 0, diagnostics: Vec::new() }
+        Parser {
+            tokens,
+            cursor: 0,
+            diagnostics: Vec::new(),
+        }
     }
 
     pub fn diagnostics(&self) -> &[Diagnostic] {
@@ -60,7 +64,10 @@ impl<'a> Parser<'a> {
         if TokenKind::from(token) == expected {
             Ok(token)
         } else {
-            self.error(&format!("Expected {} got {}", expected, token.value), token.span);
+            self.error(
+                &format!("Expected {} got {}", expected, token.value),
+                token.span,
+            );
             Err(())
         }
     }

@@ -1,9 +1,9 @@
-use std::cell::UnsafeCell;
 use crate::interner::Symbol;
+use crate::string::LoxString;
 use crate::table::Table;
 use crate::value::Value;
 use lox_gc::{Trace, Tracer};
-use crate::string::LoxString;
+use std::cell::UnsafeCell;
 
 #[derive(Debug)]
 pub struct Class {
@@ -31,9 +31,7 @@ impl Class {
     }
 
     fn methods(&self) -> &Table {
-        unsafe {
-            &*self.methods.get()
-        }
+        unsafe { &*self.methods.get() }
     }
 }
 

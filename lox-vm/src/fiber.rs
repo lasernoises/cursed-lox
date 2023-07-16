@@ -1,12 +1,12 @@
-use crate::memory::*;
-use crate::value::Value;
-use lox_gc::{Trace, Gc, Tracer};
-use std::cell::{Cell, UnsafeCell};
-use crate::stack::{Stack, StackBlock};
-use crate::VmError;
-use crate::runtime::Signal;
-use arrayvec::ArrayVec;
 use crate::array::Array;
+use crate::memory::*;
+use crate::runtime::Signal;
+use crate::stack::{Stack, StackBlock};
+use crate::value::Value;
+use crate::VmError;
+use arrayvec::ArrayVec;
+use lox_gc::{Gc, Trace, Tracer};
+use std::cell::{Cell, UnsafeCell};
 
 pub struct CallFrame {
     pub base_counter: usize,
@@ -24,7 +24,11 @@ unsafe impl Trace for CallFrame {
 
 impl CallFrame {
     pub fn new(object: Gc<Closure>, base_counter: usize) -> Self {
-        let ip = object.function.import.chunk(object.function.chunk_index).as_ptr();
+        let ip = object
+            .function
+            .import
+            .chunk(object.function.chunk_index)
+            .as_ptr();
         Self {
             base_counter,
             closure: object,
@@ -78,9 +82,7 @@ impl Fiber {
 
     #[inline]
     pub fn with_stack<T>(&self, func: impl FnOnce(&mut Stack) -> T) -> T {
-        let stack = unsafe {
-            &mut *self.stack.get()
-        };
+        let stack = unsafe { &mut *self.stack.get() };
 
         func(stack)
     }
@@ -99,9 +101,7 @@ impl Fiber {
     }
 
     pub fn begin_frame(&self, closure: Gc<Closure>) {
-        let base_counter = self.with_stack(|stack| {
-            stack.len() - closure.function.arity - 1
-        });
+        let base_counter = self.with_stack(|stack| stack.len() - closure.function.arity - 1);
 
         let frames = unsafe { &mut *self.frames.get() };
 
@@ -129,9 +129,7 @@ impl Fiber {
     pub fn current_frame(&self) -> &CallFrame {
         let frames = unsafe { &*self.frames.get() };
 
-        unsafe {
-            frames.last().unwrap_unchecked()
-        }
+        unsafe { frames.last().unwrap_unchecked() }
     }
 
     #[inline]

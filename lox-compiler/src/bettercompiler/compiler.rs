@@ -168,11 +168,7 @@ impl Compiler {
         c.locals.scope_depth() > 0
     }
 
-    pub fn with_context<F>(
-        &mut self,
-        context_type: ContextType,
-        f: F,
-    ) -> (ChunkIndex, Vec<Upvalue>)
+    pub fn with_context<F>(&mut self, context_type: ContextType, f: F) -> (ChunkIndex, Vec<Upvalue>)
     where
         F: FnOnce(&mut Self),
     {
@@ -255,7 +251,7 @@ impl Compiler {
             Err(_) => {
                 self.add_error("Local not initialized", Span::empty()); //TODO
                 None
-            },
+            }
             Ok(local) => local,
         }
     }
@@ -305,7 +301,7 @@ impl Compiler {
                 Err(_) => {
                     self.add_error("Local not initialized", Span::empty()); //TODO
                     return None;
-                },
+                }
                 Ok(Some(local)) => {
                     //TODO expect() this instead?, locals should *never* be uninitialized when resolving upvalues
                     self.contexts[i].locals.mark_captured(local);
@@ -314,7 +310,7 @@ impl Compiler {
                         upvalue = self.contexts[j].add_upvalue(Upvalue::Upvalue(upvalue));
                     }
                     return Some(upvalue);
-                },
+                }
                 Ok(None) => (),
             }
         }

@@ -1,20 +1,18 @@
-use crate::runtime::{Runtime, Signal, VmError};
-use crate::memory::*;
-use lox_gc::Gc;
 use super::fiber::Fiber;
+use crate::memory::*;
+use crate::runtime::{Runtime, Signal, VmError};
 use crate::value::Value;
+use lox_gc::Gc;
 
 macro_rules! as_obj {
-    ($self:ident, $value:expr, $tag:ident) => {
-        {
-            let value = $value;
-            if value.is_object_of_type::<$tag>() {
-                value.as_object().cast::<$tag>()
-            } else {
-                return $self.fiber.runtime_error(VmError::UnexpectedValue);
-            }
+    ($self:ident, $value:expr, $tag:ident) => {{
+        let value = $value;
+        if value.is_object_of_type::<$tag>() {
+            value.as_object().cast::<$tag>()
+        } else {
+            return $self.fiber.runtime_error(VmError::UnexpectedValue);
         }
-    };
+    }};
 }
 
 impl Runtime {
@@ -25,45 +23,45 @@ impl Runtime {
             let opcode = self.next_u8();
             //println!("opcode: {}", opcode);
             let result = match opcode {
-                opcode::IMPORT        => self.op_import(),
+                opcode::IMPORT => self.op_import(),
                 opcode::IMPORT_GLOBAL => self.op_import_global(),
-                opcode::CLOSURE       => self.op_closure(),
-                opcode::CLASS         => self.op_class(),
-                opcode::METHOD        => self.op_method(),
-                opcode::SET_PROPERTY  => self.op_set_property(),
-                opcode::GET_PROPERTY  => self.op_get_property(),
-                opcode::PRINT         => self.op_print(),
-                opcode::NIL           => self.op_nil(),
-                opcode::RETURN        => self.op_return(),
-                opcode::ADD           => self.op_add(),
-                opcode::SUBTRACT      => self.op_subtract(),
-                opcode::MULTIPLY      => self.op_multiply(),
-                opcode::DIVIDE        => self.op_divide(),
-                opcode::POP           => self.op_pop(),
+                opcode::CLOSURE => self.op_closure(),
+                opcode::CLASS => self.op_class(),
+                opcode::METHOD => self.op_method(),
+                opcode::SET_PROPERTY => self.op_set_property(),
+                opcode::GET_PROPERTY => self.op_get_property(),
+                opcode::PRINT => self.op_print(),
+                opcode::NIL => self.op_nil(),
+                opcode::RETURN => self.op_return(),
+                opcode::ADD => self.op_add(),
+                opcode::SUBTRACT => self.op_subtract(),
+                opcode::MULTIPLY => self.op_multiply(),
+                opcode::DIVIDE => self.op_divide(),
+                opcode::POP => self.op_pop(),
                 opcode::DEFINE_GLOBAL => self.op_define_global(),
-                opcode::GET_GLOBAL    => self.op_get_global(),
-                opcode::SET_GLOBAL    => self.op_set_global(),
-                opcode::GET_LOCAL     => self.op_get_local(),
-                opcode::SET_LOCAL     => self.op_set_local(),
-                opcode::TRUE          => self.op_bool(true),
-                opcode::FALSE         => self.op_bool(false),
+                opcode::GET_GLOBAL => self.op_get_global(),
+                opcode::SET_GLOBAL => self.op_set_global(),
+                opcode::GET_LOCAL => self.op_get_local(),
+                opcode::SET_LOCAL => self.op_set_local(),
+                opcode::TRUE => self.op_bool(true),
+                opcode::FALSE => self.op_bool(false),
                 opcode::JUMP_IF_FALSE => self.op_jump_if_false(),
-                opcode::JUMP          => self.op_jump(),
-                opcode::LESS          => self.op_less(),
-                opcode::GREATER       => self.op_greater(),
-                opcode::EQUAL         => self.op_equal(),
-                opcode::CALL          => self.op_call(),
-                opcode::NEGATE        => self.op_negate(),
-                opcode::NOT           => self.op_not(),
-                opcode::GET_UPVALUE   => self.op_get_upvalue(),
-                opcode::SET_UPVALUE   => self.op_set_upvalue(),
+                opcode::JUMP => self.op_jump(),
+                opcode::LESS => self.op_less(),
+                opcode::GREATER => self.op_greater(),
+                opcode::EQUAL => self.op_equal(),
+                opcode::CALL => self.op_call(),
+                opcode::NEGATE => self.op_negate(),
+                opcode::NOT => self.op_not(),
+                opcode::GET_UPVALUE => self.op_get_upvalue(),
+                opcode::SET_UPVALUE => self.op_set_upvalue(),
                 opcode::CLOSE_UPVALUE => self.op_close_upvalue(),
-                opcode::INVOKE        => self.op_invoke(),
-                opcode::LIST          => self.op_list(),
-                opcode::GET_INDEX     => self.op_get_index(),
-                opcode::SET_INDEX     => self.op_set_index(),
-                opcode::NUMBER        => self.op_number(),
-                opcode::STRING        => self.op_string(),
+                opcode::INVOKE => self.op_invoke(),
+                opcode::LIST => self.op_list(),
+                opcode::GET_INDEX => self.op_get_index(),
+                opcode::SET_INDEX => self.op_set_index(),
+                opcode::NUMBER => self.op_number(),
+                opcode::STRING => self.op_string(),
                 _ => unreachable!(),
             };
 
@@ -72,10 +70,10 @@ impl Runtime {
                 Signal::More => (),
                 Signal::RuntimeError => {
                     return Err(self.fiber.error().unwrap_or(VmError::Unknown));
-                },
+                }
                 Signal::ContextSwitch => {
                     self.context_switch();
-                },
+                }
             }
         }
     }
@@ -135,15 +133,14 @@ impl Runtime {
     pub fn op_list(&mut self) -> Signal {
         let arity = self.next_u8();
 
-        let list = self.fiber.with_stack(|stack| {
-            List::with_stack(arity as _, stack)
-        });
+        let list = self
+            .fiber
+            .with_stack(|stack| List::with_stack(arity as _, stack));
 
         let list: Gc<List> = self.manage(list.into());
 
-        self.fiber.with_stack(|stack| {
-            stack.push(Value::from_object(list.erase()))
-        });
+        self.fiber
+            .with_stack(|stack| stack.push(Value::from_object(list.erase())));
 
         Signal::More
     }
@@ -156,9 +153,8 @@ impl Runtime {
         let path = current_import.string(index);
 
         if let Some(import) = self.import(path.as_str()) {
-            self.fiber.with_stack(|stack| {
-                stack.push(Value::from_object(import.erase()))
-            });
+            self.fiber
+                .with_stack(|stack| stack.push(Value::from_object(import.erase())));
 
             return Signal::More;
         }
@@ -168,17 +164,14 @@ impl Runtime {
             Err(err) => return self.fiber.runtime_error(err),
         };
 
-        self.fiber.with_stack(|stack| {
-            stack.push(Value::from_object(import.erase()))
-        });
+        self.fiber
+            .with_stack(|stack| stack.push(Value::from_object(import.erase())));
 
         let fiber = Fiber::new(Some(self.fiber));
 
         let closure = self.manage(Closure::with_import(import));
 
-        fiber.with_stack(|stack| {
-            stack.push(Value::from_object(closure.erase()))
-        });
+        fiber.with_stack(|stack| stack.push(Value::from_object(closure.erase())));
 
         fiber.begin_frame(closure);
 
@@ -193,9 +186,7 @@ impl Runtime {
         let current_import = self.fiber.current_import();
         let identifier = current_import.symbol(index);
 
-        let import = self.fiber.with_stack(|stack| {
-            stack.peek_n(0)
-        });
+        let import = self.fiber.with_stack(|stack| stack.peek_n(0));
 
         let import = as_obj!(self, import, Import);
 
@@ -216,9 +207,7 @@ impl Runtime {
     pub fn op_jump_if_false(&mut self) -> Signal {
         let to = self.next_i16();
 
-        let value = self.fiber.with_stack(|stack| {
-            stack.peek_n(0)
-        });
+        let value = self.fiber.with_stack(|stack| stack.peek_n(0));
 
         if value.is_falsey() {
             self.set_ip(to);
@@ -242,17 +231,13 @@ impl Runtime {
     }
 
     pub fn op_bool(&mut self, value: bool) -> Signal {
-        self.fiber.with_stack(|stack| {
-            stack.push(value.into())
-        });
+        self.fiber.with_stack(|stack| stack.push(value.into()));
 
         Signal::More
     }
 
     pub fn op_nil(&mut self) -> Signal {
-        self.fiber.with_stack(|stack| {
-            stack.push(Value::NIL)
-        });
+        self.fiber.with_stack(|stack| stack.push(Value::NIL));
 
         Signal::More
     }
@@ -266,18 +251,16 @@ impl Runtime {
         let current_import = self.fiber.current_import();
         let identifier = current_import.symbol(index);
 
-        let (class, closure) = self.fiber.with_stack(|stack| {
-            (stack.peek_n(1), stack.peek_n(0))
-        });
+        let (class, closure) = self
+            .fiber
+            .with_stack(|stack| (stack.peek_n(1), stack.peek_n(0)));
 
         let class = as_obj!(self, class, Class);
         let closure = as_obj!(self, closure, Closure);
 
         class.set_method(identifier, Value::from_object(closure.erase()));
 
-        self.fiber.with_stack(|stack| {
-            stack.pop()
-        });
+        self.fiber.with_stack(|stack| stack.pop());
 
         Signal::More
     }
@@ -303,9 +286,7 @@ impl Runtime {
     }
 
     pub fn op_pop(&mut self) -> Signal {
-        self.fiber.with_stack(|stack| {
-            stack.pop()
-        });
+        self.fiber.with_stack(|stack| stack.pop());
 
         Signal::More
     }
@@ -313,9 +294,7 @@ impl Runtime {
     pub fn op_call(&mut self) -> Signal {
         let arity = self.next_u8() as _;
 
-        let callee = self.fiber.with_stack(|stack| {
-            stack.peek_n(arity)
-        });
+        let callee = self.fiber.with_stack(|stack| stack.peek_n(arity));
 
         self.call(arity, callee)
     }
@@ -324,9 +303,7 @@ impl Runtime {
         let index = self.next_u16();
         let value = self.fiber.current_import().number(index as _);
 
-        self.fiber.with_stack(|stack| {
-            stack.push(value.into())
-        });
+        self.fiber.with_stack(|stack| stack.push(value.into()));
 
         Signal::More
     }
@@ -335,9 +312,8 @@ impl Runtime {
         let index = self.next_u16();
         let value = self.fiber.current_import().string(index as _);
 
-        self.fiber.with_stack(|stack| {
-            stack.push(Value::from_object(value.erase()))
-        });
+        self.fiber
+            .with_stack(|stack| stack.push(Value::from_object(value.erase())));
 
         Signal::More
     }
@@ -445,9 +421,7 @@ impl Runtime {
     }
 
     pub fn op_add(&mut self) -> Signal {
-        let (b, a) = self.fiber.with_stack(|stack| {
-            (stack.pop(), stack.pop())
-        });
+        let (b, a) = self.fiber.with_stack(|stack| (stack.pop(), stack.pop()));
 
         if a.is_number() && b.is_number() {
             let a = a.as_number();
@@ -472,9 +446,7 @@ impl Runtime {
     pub fn op_set_upvalue(&mut self) -> Signal {
         let index = self.next_u32() as usize;
 
-        let value = self.fiber.with_stack(|stack| {
-            stack.peek_n(0)
-        });
+        let value = self.fiber.with_stack(|stack| stack.peek_n(0));
 
         let upvalue = self.fiber.current_frame().closure.upvalues[index];
         self.fiber.set_upvalue(upvalue, value);
@@ -482,9 +454,7 @@ impl Runtime {
     }
 
     pub fn op_close_upvalue(&mut self) -> Signal {
-        let index = self.fiber.with_stack(|stack| {
-            stack.len() - 1
-        });
+        let index = self.fiber.with_stack(|stack| stack.len() - 1);
 
         self.fiber.close_upvalues(index);
 
@@ -537,7 +507,6 @@ impl Runtime {
             } else {
                 stack.push(false.into())
             }
-
         });
 
         Signal::More
@@ -591,15 +560,12 @@ impl Runtime {
         let current_import = self.fiber.current_import();
         let property = current_import.symbol(index);
 
-        let instance = self.fiber.with_stack(|stack| {
-            stack.peek_n(1)
-        });
+        let instance = self.fiber.with_stack(|stack| stack.peek_n(1));
 
         let instance = as_obj!(self, instance, Instance);
 
-        self.fiber.with_stack(|stack| {
-            instance.set_field(property, stack.peek_n(0))
-        });
+        self.fiber
+            .with_stack(|stack| instance.set_field(property, stack.peek_n(0)));
 
         self.fiber.with_stack(|stack| {
             let value = stack.pop();
@@ -624,9 +590,7 @@ impl Runtime {
 
         if let Some(instance) = instance.try_cast::<Instance>() {
             if let Some(value) = instance.field(property) {
-                self.fiber.with_stack(|stack| {
-                    stack.push(value)
-                });
+                self.fiber.with_stack(|stack| stack.push(value));
 
                 return Signal::More;
             }
@@ -639,14 +603,16 @@ impl Runtime {
             None => return self.fiber.runtime_error(VmError::UndefinedProperty),
         };
 
-        let bind: Gc<BoundMethod> = self.manage(BoundMethod {
-            receiver: instance.as_object(),
-            method,
-        }.into());
+        let bind: Gc<BoundMethod> = self.manage(
+            BoundMethod {
+                receiver: instance.as_object(),
+                method,
+            }
+            .into(),
+        );
 
-        self.fiber.with_stack(|stack| {
-            stack.push(Value::from_object(bind.erase()))
-        });
+        self.fiber
+            .with_stack(|stack| stack.push(Value::from_object(bind.erase())));
 
         Signal::More
     }
@@ -657,9 +623,7 @@ impl Runtime {
         let closure: Gc<Closure> = self.manage(Closure::new(index, self.fiber));
 
         let obj = Value::from_object(closure.erase());
-        self.fiber.with_stack(|stack| {
-            stack.push(obj)
-        });
+        self.fiber.with_stack(|stack| stack.push(obj));
 
         Signal::More
     }
@@ -671,9 +635,7 @@ impl Runtime {
         let current_import = self.fiber.current_import();
         let property = current_import.symbol(index);
 
-        let instance = self.fiber.with_stack(|stack| {
-            stack.peek_n(arity)
-        });
+        let instance = self.fiber.with_stack(|stack| stack.peek_n(arity));
 
         if !instance.is_object() {
             return self.fiber.runtime_error(VmError::UnexpectedValue);
@@ -710,5 +672,3 @@ impl Runtime {
         }
     }
 }
-
-

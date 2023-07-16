@@ -1,9 +1,9 @@
-use std::fmt::Display;
-use crate::value::Value;
-use std::cell::UnsafeCell;
-use lox_gc::{Trace, Tracer};
-use crate::stack::Stack;
 use crate::array::Array;
+use crate::stack::Stack;
+use crate::value::Value;
+use lox_gc::{Trace, Tracer};
+use std::cell::UnsafeCell;
+use std::fmt::Display;
 
 pub struct List {
     data: UnsafeCell<Array<Value>>,
@@ -44,15 +44,11 @@ impl List {
     }
 
     fn data(&self) -> &Array<Value> {
-        unsafe {
-            &*self.data.get()
-        }
+        unsafe { &*self.data.get() }
     }
 
     fn data_mut(&self) -> &mut Array<Value> {
-        unsafe {
-            &mut *self.data.get()
-        }
+        unsafe { &mut *self.data.get() }
     }
 }
 
@@ -74,4 +70,3 @@ impl Display for List {
         write!(f, "]")
     }
 }
-

@@ -1,5 +1,5 @@
+use crate::memory::{Class, Import};
 use lox_gc::{Gc, Trace, Tracer};
-use crate::memory::{Import, Class};
 
 pub struct Builtins {
     pub empty_class: Gc<Class>,

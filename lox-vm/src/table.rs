@@ -1,7 +1,7 @@
-use super::value::Value;
 use super::interner::Symbol;
-use lox_gc::{Trace, Tracer};
+use super::value::Value;
 use crate::array::Array;
+use lox_gc::{Trace, Tracer};
 
 #[derive(Copy, Clone)]
 struct Entry {
@@ -40,7 +40,13 @@ impl Table {
 
     #[allow(dead_code)]
     pub fn new() -> Self {
-        let entries = Array::with_contents(Entry { key: Symbol::invalid(), value: Value::NIL }, Self::INITIAL_CAPACITY);
+        let entries = Array::with_contents(
+            Entry {
+                key: Symbol::invalid(),
+                value: Value::NIL,
+            },
+            Self::INITIAL_CAPACITY,
+        );
 
         Self {
             count: 0,
@@ -114,10 +120,20 @@ impl Table {
     }
 
     fn adjust_capacity(&mut self) {
-        let new_capacity = if self.capacity < 8 { 8 } else { self.capacity * 2 };
+        let new_capacity = if self.capacity < 8 {
+            8
+        } else {
+            self.capacity * 2
+        };
 
         //TODO Use realloc (see https://doc.rust-lang.org/nomicon/vec/vec-alloc.html)
-        let mut new_entries = Array::with_contents(Entry { key: Symbol::invalid(), value: Value::NIL }, new_capacity);
+        let mut new_entries = Array::with_contents(
+            Entry {
+                key: Symbol::invalid(),
+                value: Value::NIL,
+            },
+            new_capacity,
+        );
 
         for entry in self.entries.iter() {
             let new_index = find_entry(new_capacity, &new_entries, entry.key);
