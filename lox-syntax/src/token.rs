@@ -28,7 +28,9 @@ pub enum Token {
     LessEqual,
 
     // Literals.
+    /// with $
     Identifier(String),
+
     String(String),
     Number(f64),
 
@@ -55,6 +57,7 @@ pub enum Token {
     Eof,
     UnterminatedString,
     Unknown(char),
+    UnknownKeyword(String),
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -86,6 +89,7 @@ pub enum TokenKind {
 
     // Literals.
     Identifier,
+
     String,
     Number,
 
@@ -112,6 +116,7 @@ pub enum TokenKind {
     Eof,
     UnterminatedString,
     Unknown,
+    UnknownKeyword,
 }
 
 impl Display for Token {
@@ -174,6 +179,7 @@ impl From<&Token> for TokenKind {
             Token::Eof => TokenKind::Eof,
             Token::UnterminatedString => TokenKind::UnterminatedString,
             Token::Unknown(_) => TokenKind::Unknown,
+            Token::UnknownKeyword(_) => TokenKind::UnknownKeyword,
         }
     }
 }
@@ -228,6 +234,7 @@ impl Display for TokenKind {
                 TokenKind::Eof => "<EOF>",
                 TokenKind::UnterminatedString => "<Unterminated String>",
                 TokenKind::Unknown => "<Unknown>",
+                TokenKind::UnknownKeyword => "<Unknown Keyword>",
             }
         )
     }

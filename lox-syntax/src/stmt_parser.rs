@@ -330,44 +330,44 @@ mod tests {
     }
 
     fn make_span_string(string: &str, offset: u32) -> WithSpan<String> {
-        unsafe { WithSpan::new_unchecked(string.into(), offset, offset + string.len() as u32) }
+        unsafe { WithSpan::new_unchecked(string.into(), offset, offset + 1 + string.len() as u32) }
     }
 
     #[test]
     fn test_var_decl() {
         assert_eq!(
-            parse_str("var beverage;"),
+            parse_str("var $beverage;"),
             Ok(vec![ws(
                 Stmt::Var(make_span_string("beverage", 4), None),
-                0..13
+                0..14
             ),])
         );
         assert_eq!(
-            parse_str("var beverage = nil;"),
+            parse_str("var $beverage = nil;"),
             Ok(vec![ws(
                 Stmt::Var(
                     make_span_string("beverage", 4),
-                    Some(Box::new(ws(Expr::Nil, 15..18)))
+                    Some(Box::new(ws(Expr::Nil, 16..19)))
                 ),
-                0..19
+                0..20
             ),])
         );
 
         unsafe {
             assert_eq!(
-                parse_str("var beverage = x = nil;"),
+                parse_str("var $beverage = $x = nil;"),
                 Ok(vec![ws(
                     Stmt::Var(
                         make_span_string("beverage", 4),
                         Some(Box::new(ws(
                             Expr::Assign(
-                                WithSpan::new_unchecked("x".into(), 15, 16),
-                                Box::new(ws(Expr::Nil, 19..22))
+                                WithSpan::new_unchecked("x".into(), 16, 18),
+                                Box::new(ws(Expr::Nil, 21..24))
                             ),
-                            15..22
+                            16..24
                         )))
                     ),
-                    0..23
+                    0..25
                 ),])
             );
         }
@@ -472,13 +472,13 @@ mod tests {
         );
 
         assert_eq!(
-            parse_str("import \"mymodule\" for message;"),
+            parse_str("import \"mymodule\" for $message;"),
             Ok(vec![ws(
                 Stmt::Import(
                     ws("mymodule".into(), 7..17),
-                    Some(vec![ws("message".into(), 22..29),])
+                    Some(vec![ws("message".into(), 22..30),])
                 ),
-                0..30
+                0..31
             ),])
         );
     }
@@ -487,63 +487,32 @@ mod tests {
     fn test_function_stmt() {
         unsafe {
             assert_eq!(
-                parse_str("fun test(){}"),
+                parse_str("fun $test(){}"),
                 Ok(vec![ws(
-                    Stmt::Function(WithSpan::new_unchecked("test".into(), 4, 8), vec![], vec![]),
-                    0..12
-                ),])
-            );
-            assert_eq!(
-                parse_str("fun test(a){}"),
-                Ok(vec![ws(
-                    Stmt::Function(
-                        WithSpan::new_unchecked("test".into(), 4, 8),
-                        vec![WithSpan::new_unchecked("a".into(), 9, 10)],
-                        vec![]
-                    ),
+                    Stmt::Function(WithSpan::new_unchecked("test".into(), 4, 9), vec![], vec![]),
                     0..13
                 ),])
             );
             assert_eq!(
-                parse_str("fun test(){nil;}"),
+                parse_str("fun $test($a){}"),
                 Ok(vec![ws(
                     Stmt::Function(
-                        WithSpan::new_unchecked("test".into(), 4, 8),
+                        WithSpan::new_unchecked("test".into(), 4, 9),
+                        vec![WithSpan::new_unchecked("a".into(), 10, 12)],
+                        vec![]
+                    ),
+                    0..15
+                ),])
+            );
+            assert_eq!(
+                parse_str("fun $test(){nil;}"),
+                Ok(vec![ws(
+                    Stmt::Function(
+                        WithSpan::new_unchecked("test".into(), 4, 9),
                         vec![],
                         vec![ws(
-                            Stmt::Expression(Box::new(ws(Expr::Nil, 11..14))),
-                            11..15
-                        ),]
-                    ),
-                    0..16
-                ),])
-            );
-        }
-    }
-
-    #[test]
-    fn test_class_stmt() {
-        unsafe {
-            assert_eq!(
-                parse_str("class test{}"),
-                Ok(vec![ws(
-                    Stmt::Class(WithSpan::new_unchecked("test".into(), 6, 10), None, vec![]),
-                    0..12
-                ),])
-            );
-            assert_eq!(
-                parse_str("class test{a(){}}"),
-                Ok(vec![ws(
-                    Stmt::Class(
-                        WithSpan::new_unchecked("test".into(), 6, 10),
-                        None,
-                        vec![ws(
-                            Stmt::Function(
-                                WithSpan::new_unchecked("a".into(), 11, 12),
-                                vec![],
-                                vec![]
-                            ),
-                            11..16
+                            Stmt::Expression(Box::new(ws(Expr::Nil, 12..15))),
+                            12..16
                         ),]
                     ),
                     0..17
@@ -553,23 +522,54 @@ mod tests {
     }
 
     #[test]
-    fn test_class_inheritance() {
+    fn test_class_stmt() {
         unsafe {
             assert_eq!(
-                parse_str("class BostonCream < Doughnut {}"),
+                parse_str("class $test{}"),
+                Ok(vec![ws(
+                    Stmt::Class(WithSpan::new_unchecked("test".into(), 6, 11), None, vec![]),
+                    0..13
+                ),])
+            );
+            assert_eq!(
+                parse_str("class $test{$a(){}}"),
                 Ok(vec![ws(
                     Stmt::Class(
-                        WithSpan::new_unchecked("BostonCream".into(), 6, 17),
-                        Some(WithSpan::new_unchecked("Doughnut".into(), 20, 28)),
-                        vec![]
+                        WithSpan::new_unchecked("test".into(), 6, 11),
+                        None,
+                        vec![ws(
+                            Stmt::Function(
+                                WithSpan::new_unchecked("a".into(), 12, 14),
+                                vec![],
+                                vec![]
+                            ),
+                            12..18
+                        ),]
                     ),
-                    0..31
+                    0..19
                 ),])
             );
         }
-        assert_errs("class BostonCream < {}", &["Expected identifier got '{'"]);
+    }
+
+    #[test]
+    fn test_class_inheritance() {
+        unsafe {
+            assert_eq!(
+                parse_str("class $BostonCream < $Doughnut {}"),
+                Ok(vec![ws(
+                    Stmt::Class(
+                        WithSpan::new_unchecked("BostonCream".into(), 6, 18),
+                        Some(WithSpan::new_unchecked("Doughnut".into(), 21, 30)),
+                        vec![]
+                    ),
+                    0..33
+                ),])
+            );
+        }
+        assert_errs("class $BostonCream < {}", &["Expected identifier got '{'"]);
         assert_errs(
-            "class BostonCream < Doughnut < BakedGood {}",
+            "class $BostonCream < $Doughnut < $BakedGood {}",
             &["Expected '{' got '<'"],
         );
     }
@@ -604,17 +604,17 @@ mod tests {
             ),])
         );
         assert_eq!(
-            parse_str("for(var i=0;;){}"),
+            parse_str("for(var $i=0;;){}"),
             Ok(vec![block(
                 vec![
-                    var_i_zero(10, 4..12),
+                    var_i_zero(11, 4..13),
                     while_stmt(
                         ws(Expr::Boolean(true), 0..0),
-                        ws(Stmt::Block(vec![]), 14..16),
-                        0..16
+                        ws(Stmt::Block(vec![]), 15..17),
+                        0..17
                     ),
                 ],
-                0..16
+                0..17
             )])
         );
         assert_eq!(

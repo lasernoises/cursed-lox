@@ -124,7 +124,8 @@ impl<'a> Lexer<'a> {
                 }
             }
             x if x.is_numeric() => self.number(x),
-            x if x.is_ascii_alphabetic() || x == '_' => self.identifier(x),
+            x if x.is_ascii_alphabetic() => self.keyword(x),
+            '$' => self.identifier(),
             '.' => Some(Token::Dot),
             '(' => Some(Token::LeftParen),
             ')' => Some(Token::RightParen),
@@ -150,7 +151,16 @@ impl<'a> Lexer<'a> {
     }
 
     //TODO Static the keywords
-    fn keyword(&self, identifier: &str) -> Option<Token> {
+    fn keyword(&mut self, x: char) -> Option<Token> {
+        let mut identifier = String::new();
+        identifier.push(x);
+        let rest: String = self
+            .it
+            .consume_while(|a| a.is_ascii_alphanumeric() || a == '_')
+            .into_iter()
+            .collect();
+        identifier.push_str(rest.as_str());
+
         use std::collections::HashMap;
         let mut keywords: HashMap<&str, Token> = HashMap::new();
         keywords.insert("and", Token::And);
@@ -171,25 +181,21 @@ impl<'a> Lexer<'a> {
         keywords.insert("while", Token::While);
         keywords.insert("import", Token::Import);
 
-        match keywords.get(identifier) {
-            None => None,
+        match keywords.get(&identifier as &str) {
+            None => Some(Token::UnknownKeyword(identifier)),
             Some(token) => Some(token.clone()),
         }
     }
 
-    fn identifier(&mut self, x: char) -> Option<Token> {
+    fn identifier(&mut self) -> Option<Token> {
         let mut identifier = String::new();
-        identifier.push(x);
         let rest: String = self
             .it
             .consume_while(|a| a.is_ascii_alphanumeric() || a == '_')
             .into_iter()
             .collect();
         identifier.push_str(rest.as_str());
-        match self.keyword(&identifier) {
-            None => Some(Token::Identifier(identifier)),
-            Some(token) => Some(token),
-        }
+        Some(Token::Identifier(identifier))
     }
 
     fn number(&mut self, x: char) -> Option<Token> {
@@ -263,6 +269,10 @@ mod tests {
             tokenize("& 3.14"),
             vec![Token::Unknown('&'), Token::Number(3.14)]
         );
+        assert_eq!(
+            tokenize("orchid"),
+            vec![Token::UnknownKeyword("orchid".to_string())],
+        );
     }
 
     #[test]
@@ -297,11 +307,11 @@ mod tests {
         assert_eq!(tokenize("!"), vec![Token::Bang]);
         assert_eq!(tokenize("!="), vec![Token::BangEqual]);
         assert_eq!(
-            tokenize("test"),
+            tokenize("$test"),
             vec![Token::Identifier("test".to_string())]
         );
         assert_eq!(
-            tokenize("orchid"),
+            tokenize("$orchid"),
             vec![Token::Identifier("orchid".to_string())]
         );
         assert_eq!(tokenize("or"), vec![Token::Or]);

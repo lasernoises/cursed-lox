@@ -504,11 +504,11 @@ mod tests {
         assert("true", ws(Expr::Boolean(true), 0..4));
         assert("false", ws(Expr::Boolean(false), 0..5));
         assert("\"iets\"", ws(s("iets"), 0..6));
-        assert("iets", ws(v("iets", 0..4), 0..4));
+        assert("$iets", ws(v("iets", 0..5), 0..5));
         assert("this", ws(Expr::This, 0..4));
         assert(
-            "super.iets",
-            ws(Expr::Super(ws("iets".into(), 6..10)), 0..10),
+            "super.$iets",
+            ws(Expr::Super(ws("iets".into(), 6..11)), 0..11),
         );
     }
 
@@ -659,17 +659,17 @@ mod tests {
         use help::{assert, simple_binary2};
         use make::*;
 
-        let expr = wsa(wsi("a", 0..1), wsn(3., 2..3));
-        assert("a=3", expr);
-        let expr = wsa(wsi("a", 0..1), wsa(wsi("b", 2..3), wsn(3., 4..5)));
-        assert("a=b=3", expr);
+        let expr = wsa(wsi("a", 0..2), wsn(3., 3..4));
+        assert("$a=3", expr);
+        let expr = wsa(wsi("a", 0..2), wsa(wsi("b", 3..5), wsn(3., 6..7)));
+        assert("$a=$b=3", expr);
         let expr = wsa(
-            wsi("a", 0..1),
-            ws(simple_binary2(BinaryOperator::Plus, 1, 2), 2..5),
+            wsi("a", 0..2),
+            ws(simple_binary2(BinaryOperator::Plus, 1, 3), 3..6),
         );
-        assert("a=1+2", expr);
+        assert("$a=1+2", expr);
 
-        assert_errs("a=", &["Unexpected <EOF>"]);
+        assert_errs("$a=", &["Unexpected <EOF>"]);
         assert_errs("3=3", &["Invalid left value"]);
     }
 
@@ -678,32 +678,32 @@ mod tests {
         use help::assert;
         use make::*;
 
-        let expr = wscall(ws(v("a", 0..1), 0..1), vec![], 0..3);
-        assert("a()", expr);
+        let expr = wscall(ws(v("a", 0..2), 0..2), vec![], 0..4);
+        assert("$a()", expr);
 
-        let expr = wscall(ws(v("a", 0..1), 0..1), vec![wsn(3., 2..3)], 0..4);
-        assert("a(3)", expr);
+        let expr = wscall(ws(v("a", 0..2), 0..2), vec![wsn(3., 3..4)], 0..5);
+        assert("$a(3)", expr);
 
         let expr = wscall(
-            ws(v("a", 0..1), 0..1),
-            vec![wsn(3., 2..3), wsn(4., 4..5)],
-            0..6,
+            ws(v("a", 0..2), 0..2),
+            vec![wsn(3., 3..4), wsn(4., 5..6)],
+            0..7,
         );
-        assert("a(3,4)", expr);
+        assert("$a(3,4)", expr);
 
-        let expr = wscall(ws(v("a", 1..2), 1..2), vec![], 1..4);
+        let expr = wscall(ws(v("a", 1..3), 1..3), vec![], 1..5);
         let expr = ws(
             Expr::Unary(ws(UnaryOperator::Minus, 0..1), Box::new(expr)),
-            0..4,
+            0..5,
         );
-        assert("-a()", expr);
+        assert("-$a()", expr);
 
-        let left = wscall(ws(v("a", 0..1), 0..1), vec![], 0..3);
-        let right = wscall(ws(v("b", 4..5), 4..5), vec![], 4..7);
-        let expr = wsbo(left, ws(BinaryOperator::Plus, 3..4), right);
-        assert("a()+b()", expr);
+        let left = wscall(ws(v("a", 0..2), 0..2), vec![], 0..4);
+        let right = wscall(ws(v("b", 5..7), 5..7), vec![], 5..9);
+        let expr = wsbo(left, ws(BinaryOperator::Plus, 4..5), right);
+        assert("$a()+$b()", expr);
 
-        assert_errs("a(3,)", &["Unexpected ')'"]);
+        assert_errs("$a(3,)", &["Unexpected ')'"]);
     }
 
     #[test]
@@ -711,9 +711,9 @@ mod tests {
         use help::assert;
         use make::*;
 
-        let left = wsget(ws(v("a", 0..1), 0..1), wsi("b", 2..3));
-        let expr = wsget(left, wsi("c", 4..5));
-        assert("a.b.c", expr);
+        let left = wsget(ws(v("a", 0..2), 0..2), wsi("b", 3..5));
+        let expr = wsget(left, wsi("c", 6..8));
+        assert("$a.$b.$c", expr);
     }
 
     #[test]
@@ -721,8 +721,8 @@ mod tests {
         use help::assert;
         use make::*;
 
-        let expr = wsset(ws(v("a", 0..1), 0..1), wsi("b", 2..3), wsn(3., 4..5));
-        assert("a.b=3", expr);
+        let expr = wsset(ws(v("a", 0..2), 0..2), wsi("b", 3..5), wsn(3., 6..7));
+        assert("$a.$b=3", expr);
     }
 
     #[test]
@@ -738,18 +738,18 @@ mod tests {
         let expr = ws(Expr::List(vec![num, nil]), 0..8);
         assert("[1, nil]", expr);
 
-        let left = ws(v("x", 0..1), 0..1);
-        let right = ws(n(0.0), 2..3);
-        let expr = ws(Expr::ListGet(Box::new(left), Box::new(right)), 0..4);
-        assert("x[0]", expr);
+        let left = ws(v("x", 0..2), 0..2);
+        let right = ws(n(0.0), 3..4);
+        let expr = ws(Expr::ListGet(Box::new(left), Box::new(right)), 0..5);
+        assert("$x[0]", expr);
 
-        let left = ws(v("x", 0..1), 0..1);
-        let right = ws(n(0.0), 2..3);
-        let value = ws(n(1.0), 5..6);
+        let left = ws(v("x", 0..2), 0..2);
+        let right = ws(n(0.0), 3..4);
+        let value = ws(n(1.0), 6..7);
         let expr = ws(
             Expr::ListSet(Box::new(left), Box::new(right), Box::new(value)),
-            0..6,
+            0..7,
         );
-        assert("x[0]=1", expr);
+        assert("$x[0]=1", expr);
     }
 }
