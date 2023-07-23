@@ -164,7 +164,7 @@ fn test_stmt_print_strings() {
 #[test]
 fn test_global_variables() {
     assert_first_chunk(
-        "var x=3;",
+        "var $x=3;",
         vec![3.0.into()],
         vec![],
         vec!["x"],
@@ -182,7 +182,7 @@ fn test_global_variables() {
         ],
     );
     assert_first_chunk(
-        "var x;",
+        "var $x;",
         vec![],
         vec![],
         vec!["x"],
@@ -198,7 +198,7 @@ fn test_global_variables() {
         ],
     );
     assert_first_chunk(
-        "var x=3; print x;",
+        "var $x=3; print $x;",
         vec![3.0.into()],
         vec![],
         vec!["x"],
@@ -222,7 +222,7 @@ fn test_global_variables() {
         ],
     );
     assert_first_chunk(
-        "var x=3;x=2;",
+        "var $x=3;$x=2;",
         vec![3.0.into(), 2.0.into()],
         vec![],
         vec!["x"],
@@ -253,7 +253,7 @@ fn test_global_variables() {
 #[test]
 fn test_local_variables() {
     assert_first_chunk(
-        "{var x=3;}",
+        "{var $x=3;}",
         vec![3.0.into()],
         vec![],
         vec![],
@@ -267,7 +267,7 @@ fn test_local_variables() {
         ],
     );
     assert_first_chunk(
-        "{var x=3; print x;}",
+        "{var $x=3; print $x;}",
         vec![3.0.into()],
         vec![],
         vec![],
@@ -287,7 +287,7 @@ fn test_local_variables() {
         ],
     );
     assert_first_chunk(
-        "var x=2; {var x=3; { var x=4; print x; } print x;} print x;",
+        "var $x=2; {var $x=3; { var $x=4; print $x; } print $x;} print $x;",
         vec![2.0.into(), 3.0.into(), 4.0.into()],
         vec![],
         vec!["x"],
@@ -331,14 +331,14 @@ fn test_local_variables() {
         ],
     );
     assert_first_chunk(
-        "{var x;}",
+        "{var $x;}",
         vec![],
         vec![],
         vec![],
         vec![opcode::NIL, opcode::POP, opcode::NIL, opcode::RETURN],
     );
     assert_first_chunk(
-        "{var x;x=2;}",
+        "{var $x;$x=2;}",
         vec![2.0.into()],
         vec![],
         vec![],
@@ -563,7 +563,7 @@ fn test_while() {
 #[test]
 fn test_for() {
     assert_first_chunk(
-        "for(var i = 0; i < 10; i = i + 1) print i;",
+        "for(var $i = 0; $i < 10; $i = $i + 1) print $i;",
         vec![0.0.into(), 10.0.into(), 1.0.into()],
         vec![],
         vec![],
@@ -618,7 +618,7 @@ fn test_for() {
 
 #[test]
 fn test_simple_function() {
-    let module = compile_code("fun first() { print 3; } first();");
+    let module = compile_code("fun $first() { print 3; } $first();");
 
     assert_instructions(
         module.chunk(0),
@@ -667,7 +667,7 @@ fn test_simple_function() {
 
 #[test]
 fn test_function_with_one_argument() {
-    let module = compile_code("fun first(a) { print a; } first(3);");
+    let module = compile_code("fun $first($a) { print $a; } $first(3);");
 
     assert_instructions(
         module.chunk(0),
@@ -721,7 +721,7 @@ fn test_function_with_one_argument() {
 
 #[test]
 fn test_recursive_function_with_one_argument() {
-    let module = compile_code("fun first(a) { print first(a+1); } first(3);");
+    let module = compile_code("fun $first($a) { print $first($a+1); } $first(3);");
 
     assert_instructions(
         module.chunk(0),
@@ -786,7 +786,7 @@ fn test_recursive_function_with_one_argument() {
 
 #[test]
 fn test_functions_calling_functions() {
-    let module = compile_code("fun first() { second(); } fun second() { print 3; } first();");
+    let module = compile_code("fun $first() { $second(); } fun $second() { print 3; } $first();");
 
     assert_instructions(
         module.chunk(0),
@@ -863,7 +863,7 @@ fn test_functions_calling_functions() {
 
 #[test]
 fn test_simple_scoped_function() {
-    let module = compile_code("{ fun first() { print 3; } first(); }");
+    let module = compile_code("{ fun $first() { print 3; } $first(); }");
 
     assert_instructions(
         module.chunk(0),
@@ -906,7 +906,7 @@ fn test_simple_scoped_function() {
 
 #[test]
 fn test_simple_scoped_recursive_function() {
-    let module = compile_code("{ fun first() { print first(); } first(); }");
+    let module = compile_code("{ fun $first() { print $first(); } $first(); }");
 
     assert_instructions(
         module.chunk(0),
@@ -953,7 +953,7 @@ fn test_simple_scoped_recursive_function() {
 
 #[test]
 fn test_function_with_return() {
-    let module = compile_code("fun first() { return 3; }");
+    let module = compile_code("fun $first() { return 3; }");
 
     assert_instructions(
         module.chunk(0),
@@ -994,7 +994,7 @@ fn test_function_with_return() {
 
 #[test]
 fn test_upvalue() {
-    let module = compile_code("{var a = 3; fun f() { print a; }}");
+    let module = compile_code("{var $a = 3; fun $f() { print $a; }}");
 
     assert_instructions(
         module.chunk(0),
@@ -1038,7 +1038,7 @@ fn test_upvalue() {
 
 #[test]
 fn test_double_upvalue() {
-    let module = compile_code("{var a = 3; fun f() { fun g() { print a; } }}");
+    let module = compile_code("{var $a = 3; fun $f() { fun $g() { print $a; } }}");
 
     assert_instructions(
         module.chunk(0),
@@ -1089,7 +1089,7 @@ fn test_double_upvalue() {
 
 #[test]
 fn test_multiple_upvalue() {
-    let module = compile_code("{var a = 3; var b = 4; fun f() {print b; print a; }}");
+    let module = compile_code("{var $a = 3; var $b = 4; fun $f() {print $b; print $a; }}");
 
     assert_instructions(
         module.chunk(0),
@@ -1148,7 +1148,8 @@ fn test_multiple_upvalue() {
 
 #[test]
 fn test_multiple_double_upvalue() {
-    let module = compile_code("{var a = 3; var b = 4; fun f() { fun g() { print a; print b; }}}");
+    let module =
+        compile_code("{var $a = 3; var $b = 4; fun $f() { fun $g() { print $a; print $b; }}}");
 
     assert_instructions(
         module.chunk(0),
@@ -1210,7 +1211,7 @@ fn test_multiple_double_upvalue() {
 #[test]
 fn test_scoped_upvalue() {
     let module = compile_code(
-        "var global; fun main() { { var a = 3; fun one() { print a; } global = one; } } main();",
+        "var $global; fun $main() { { var $a = 3; fun $one() { print $a; } $global = $one; } } $main();",
     );
 
     assert_instructions(
@@ -1324,7 +1325,7 @@ fn test_simple_import() {
 
 #[test]
 fn test_complex_import() {
-    let module = compile_code("import \"foo\" for x;");
+    let module = compile_code("import \"foo\" for $x;");
 
     assert_instructions(
         module.chunk(0),
@@ -1358,7 +1359,7 @@ fn test_complex_import() {
 
 #[test]
 fn test_complex_local_import() {
-    let module = compile_code("{import \"foo\" for x; print x;}");
+    let module = compile_code("{import \"foo\" for $x; print $x;}");
 
     assert_instructions(
         module.chunk(0),
@@ -1394,7 +1395,7 @@ fn test_complex_local_import() {
 
 #[test]
 fn test_empty_class_global() {
-    let module = compile_code("class Foo {}");
+    let module = compile_code("class $Foo {}");
 
     assert_instructions(
         module.chunk(0),
@@ -1427,7 +1428,7 @@ fn test_empty_class_global() {
 
 #[test]
 fn test_empty_class_local() {
-    let module = compile_code("{class Foo {}}");
+    let module = compile_code("{class $Foo {}}");
 
     assert_instructions(
         module.chunk(0),
@@ -1453,7 +1454,7 @@ fn test_empty_class_local() {
 fn test_set_property() {
     use lox_bytecode::opcode::*;
 
-    let module = compile_code("x.test = 3;");
+    let module = compile_code("$x.$test = 3;");
 
     assert_instructions(
         module.chunk(0),
@@ -1486,7 +1487,7 @@ fn test_set_property() {
 #[test]
 fn test_get_property() {
     use lox_bytecode::opcode::*;
-    let module = compile_code("x.test;");
+    let module = compile_code("$x.$test;");
 
     assert_instructions(
         module.chunk(0),
