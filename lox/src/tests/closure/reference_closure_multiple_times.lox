@@ -1,14 +1,14 @@
-var f;
+var $f;
 
 {
-  var a = "a";
-  fun f_() {
-    print a;
-    print a;
+  var $a = "a";
+  fun $f_() {
+    print $a;
+    print $a;
   }
-  f = f_;
+  $f = $f_;
 }
 
-f();
+$f();
 // expect: a
 // expect: a

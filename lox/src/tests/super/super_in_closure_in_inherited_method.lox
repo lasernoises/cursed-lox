@@ -1,26 +1,26 @@
-class A {
-  say() {
+class $A {
+  $say() {
     print "A";
   }
 }
 
-class B < A {
-  getClosure() {
-    fun closure() {
-      super.say();
+class $B < $A {
+  $getClosure() {
+    fun $closure() {
+      $super.$say();
     }
-    return closure;
+    return $closure;
   }
 
-  say() {
+  $say() {
     print "B";
   }
 }
 
-class C < B {
-  say() {
+class $C < $B {
+  $say() {
     print "C";
   }
 }
 
-C().getClosure()(); // expect: A
+$C().$getClosure()(); // expect: A

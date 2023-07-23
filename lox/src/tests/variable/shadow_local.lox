@@ -1,8 +1,8 @@
 {
-  var a = "local";
+  var $a = "local";
   {
-    var a = "shadow";
-    print a; // expect: shadow
+    var $a = "shadow";
+    print $a; // expect: shadow
   }
-  print a; // expect: local
+  print $a; // expect: local
 }

@@ -1,11 +1,11 @@
-var f;
+var $f;
 
-fun foo(param) {
-  fun f_() {
-    print param;
+fun $foo($param) {
+  fun $f_() {
+    print $param;
   }
-  f = f_;
+  $f = $f_;
 }
-foo("param");
+$foo("param");
 
-f(); // expect: param
+$f(); // expect: param

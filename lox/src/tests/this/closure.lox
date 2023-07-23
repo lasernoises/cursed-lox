@@ -1,13 +1,13 @@
-class Foo {
-  getClosure() {
-    fun closure() {
-      return this.toString();
+class $Foo {
+  $getClosure() {
+    fun $closure() {
+      return this.$toString();
     }
-    return closure;
+    return $closure;
   }
 
-  toString() { return "Foo"; }
+  $toString() { return "Foo"; }
 }
 
-var closure = Foo().getClosure();
-print closure(); // expect: Foo
+var $closure = $Foo().$getClosure();
+print $closure(); // expect: Foo

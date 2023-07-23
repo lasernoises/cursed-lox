@@ -1,2 +1,2 @@
-fun f() {}
-print f(); // expect: nil
+fun $f() {}
+print $f(); // expect: nil

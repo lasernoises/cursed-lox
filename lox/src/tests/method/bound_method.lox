@@ -1,7 +1,7 @@
-class Foo {
-  method() {
+class $Foo {
+  $method() {
     print "method";
   }
 }
-var foo = Foo();
-foo.method(); // expect: method
+var $foo = $Foo();
+$foo.$method(); // expect: method

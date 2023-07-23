@@ -1,5 +1,5 @@
-fun f() {
+fun $f() {
   while (true) return "ok";
 }
 
-print f(); // expect: ok
+print $f(); // expect: ok

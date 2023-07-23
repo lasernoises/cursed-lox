@@ -1,9 +1,9 @@
-var foo = "variable";
+var $foo = "variable";
 
-class Foo {
-  method() {
-    print foo;
+class $Foo {
+  $method() {
+    print $foo;
   }
 }
 
-Foo().method(); // expect: variable
+$Foo().$method(); // expect: variable

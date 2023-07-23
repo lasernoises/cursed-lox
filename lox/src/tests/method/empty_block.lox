@@ -1,5 +1,5 @@
-class Foo {
-  bar() {}
+class $Foo {
+  $bar() {}
 }
 
-print Foo().bar(); // expect: nil
+print $Foo().$bar(); // expect: nil

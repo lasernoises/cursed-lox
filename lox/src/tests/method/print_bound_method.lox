@@ -1,5 +1,5 @@
-class Foo {
-  method() { }
+class $Foo {
+  $method() { }
 }
-var foo = Foo();
-print foo.method; // expect: <bound <fn method>>
+var $foo = $Foo();
+print $foo.$method; // expect: <bound <fn method>>

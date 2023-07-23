@@ -1,6 +1,6 @@
-fun f() {
+fun $f() {
   return "ok";
   print "bad";
 }
 
-print f(); // expect: ok
+print $f(); // expect: ok
