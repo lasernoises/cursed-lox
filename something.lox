@@ -1,4 +1,4 @@
 
 print "Something";
 
-var word = "Middle";
+var $word = "Middle";
