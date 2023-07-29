@@ -3,6 +3,7 @@
 It's like Lox but...
 
 - all the identifers start with a dollar sign
+- there's no class inheritance
 
 # Test suite
 

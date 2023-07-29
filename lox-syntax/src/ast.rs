@@ -84,11 +84,7 @@ pub enum Stmt {
         Vec<WithSpan<Identifier>>,
         Vec<WithSpan<Stmt>>,
     ),
-    Class(
-        WithSpan<Identifier>,
-        Option<WithSpan<Identifier>>,
-        Vec<WithSpan<Stmt>>,
-    ),
+    Class(WithSpan<Identifier>, Vec<WithSpan<Stmt>>),
     Import(WithSpan<String>, Option<Vec<WithSpan<String>>>),
 }
 

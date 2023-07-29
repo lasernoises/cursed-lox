@@ -950,11 +950,6 @@ mod regression {
     fn regression_40() {
         harness(include_str!("regression/40.lox"));
     }
-
-    #[test]
-    fn regression_394() {
-        harness(include_str!("regression/394.lox"));
-    }
 }
 
 mod r#return {

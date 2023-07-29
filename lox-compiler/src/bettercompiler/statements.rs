@@ -38,8 +38,8 @@ fn compile_stmt(compiler: &mut Compiler, stmt: &WithSpan<Stmt>) {
             }
             compile_return(compiler, expr.as_ref())
         }
-        Stmt::Class(ref identifier, ref extends, ref stmts) => {
-            compile_class(compiler, identifier.as_ref(), extends.as_ref(), stmts)
+        Stmt::Class(ref identifier, ref stmts) => {
+            compile_class(compiler, identifier.as_ref(), stmts)
         }
         Stmt::Import(path, identifiers) => compile_import(compiler, path, identifiers.as_ref()),
     }
@@ -90,12 +90,7 @@ fn compile_import(
     compiler.add_u8(opcode::POP);
 }
 
-fn compile_class(
-    compiler: &mut Compiler,
-    identifier: WithSpan<&String>,
-    _extends: Option<&WithSpan<String>>,
-    stmts: &[WithSpan<Stmt>],
-) {
+fn compile_class(compiler: &mut Compiler, identifier: WithSpan<&String>, stmts: &[WithSpan<Stmt>]) {
     declare_variable(compiler, identifier.as_ref());
     let constant = compiler.add_class(Class {
         name: identifier.value.to_string(),
@@ -105,8 +100,6 @@ fn compile_class(
     define_variable(compiler, identifier.value);
 
     compile_variable(compiler, identifier);
-
-    //TODO Extends
 
     // Methods
     for stmt in stmts {

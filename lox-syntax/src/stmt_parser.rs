@@ -39,12 +39,7 @@ fn parse_statement(it: &mut Parser) -> Result<WithSpan<Stmt>, ()> {
 fn parse_class_declaration(it: &mut Parser) -> Result<WithSpan<Stmt>, ()> {
     let begin_span = it.expect(TokenKind::Class)?;
     let name = expect_identifier(it)?;
-    let superclass = if it.optionally(TokenKind::Less)? {
-        let name = expect_identifier(it)?;
-        Some(name.clone())
-    } else {
-        None
-    };
+
     it.expect(TokenKind::LeftBrace)?;
     let mut functions: Vec<WithSpan<Stmt>> = vec![];
     while !it.check(TokenKind::RightBrace) {
@@ -53,7 +48,7 @@ fn parse_class_declaration(it: &mut Parser) -> Result<WithSpan<Stmt>, ()> {
     let end_span = it.expect(TokenKind::RightBrace)?;
 
     Ok(WithSpan::new(
-        Stmt::Class(name.clone(), superclass, functions),
+        Stmt::Class(name.clone(), functions),
         Span::union(begin_span, end_span),
     ))
 }
@@ -527,7 +522,7 @@ mod tests {
             assert_eq!(
                 parse_str("class $test{}"),
                 Ok(vec![ws(
-                    Stmt::Class(WithSpan::new_unchecked("test".into(), 6, 11), None, vec![]),
+                    Stmt::Class(WithSpan::new_unchecked("test".into(), 6, 11), vec![]),
                     0..13
                 ),])
             );
@@ -536,7 +531,6 @@ mod tests {
                 Ok(vec![ws(
                     Stmt::Class(
                         WithSpan::new_unchecked("test".into(), 6, 11),
-                        None,
                         vec![ws(
                             Stmt::Function(
                                 WithSpan::new_unchecked("a".into(), 12, 14),
@@ -554,20 +548,11 @@ mod tests {
 
     #[test]
     fn test_class_inheritance() {
-        unsafe {
-            assert_eq!(
-                parse_str("class $BostonCream < $Doughnut {}"),
-                Ok(vec![ws(
-                    Stmt::Class(
-                        WithSpan::new_unchecked("BostonCream".into(), 6, 18),
-                        Some(WithSpan::new_unchecked("Doughnut".into(), 21, 30)),
-                        vec![]
-                    ),
-                    0..33
-                ),])
-            );
-        }
-        assert_errs("class $BostonCream < {}", &["Expected identifier got '{'"]);
+        assert_errs(
+            "class $BostonCream < $Doughnut {}",
+            &["Expected '{' got '<'"],
+        );
+        assert_errs("class $BostonCream < {}", &["Expected '{' got '<'"]);
         assert_errs(
             "class $BostonCream < $Doughnut < $BakedGood {}",
             &["Expected '{' got '<'"],
