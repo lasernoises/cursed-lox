@@ -5,6 +5,10 @@ It's like Lox but...
 - all the identifers start with a dollar sign
 - there's no class inheritance
 
+# Why?
+
+Because I think it's funny.
+
 # Test suite
 
 Tests are copied from https://github.com/munificent/craftinginterpreters/tree/master/test.
